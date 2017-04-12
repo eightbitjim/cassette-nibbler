@@ -47,12 +47,14 @@ public class OricFileStateMachine {
     private boolean silenceBeforeThisByte;
     private OricTapeFile currentFile;
     private boolean currentFileReadyToReturn;
+    private OricTapeFile.FileType fileType;
 
-    public OricFileStateMachine() {
+    public OricFileStateMachine(OricTapeFile.FileType fileType) {
         byteFrame = new OricByteFrame();
         leaderRecogniser = new OricLeaderRecogniser();
         switchToState(State.WAITING_FOR_SYNC);
         currentFileReadyToReturn = false;
+        this.fileType = fileType;
         reset();
     }
 
@@ -68,7 +70,7 @@ public class OricFileStateMachine {
     }
 
     private void prepareFile() {
-        currentFile = new OricTapeFile();
+        currentFile = new OricTapeFile(fileType);
     }
 
     public TapeFile pushPulse(char pulse, long currentTimeIndex) {

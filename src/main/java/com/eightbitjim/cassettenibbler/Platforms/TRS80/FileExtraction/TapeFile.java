@@ -19,27 +19,30 @@
 package com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.Platforms.General.Formats.BinaryToASCII;
-import com.eightbitjim.cassettenibbler.TapeFile;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.Formats.BasicProgram;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TRS80TapeFile extends TapeFile {
-    List<TRS80TapeBlock> blocks;
+public class TapeFile extends com.eightbitjim.cassettenibbler.TapeFile {
+    List<TapeBlock> blocks;
     private boolean atLeastOneError;
+    public enum FileType { DRAGON32, TRS80 }
+    private FileType fileType;
 
-    public TRS80TapeFile() {
+    public TapeFile(FileType fileType) {
         blocks = new LinkedList<>();
         atLeastOneError = false;
+        this.fileType = fileType;
     }
 
     public void hasAnError() {
         atLeastOneError = true;
     }
 
-    public void addBlock(TRS80TapeBlock block) {
+    public void addBlock(TapeBlock block) {
         blocks.add(block);
     }
 
@@ -47,23 +50,14 @@ public class TRS80TapeFile extends TapeFile {
         if (blocks.size() < 2)
             return true;
 
-        switch (headerBlockDescribesFileOfType()) {
-            case BASIC_PROGRAM:
-            case MACHINE_CODE:
-            case UNKNOWN:
-                return false;
-            case ASCII:
-                return !blocks.get(blocks.size() - 1).lastBlockIfThisIsAnASCIIFile();
-        }
-
-        return false;
+        return blocks.get(blocks.size() - 1).getType() != TapeBlock.BlockType.END_OF_FILE;
     }
 
     @Override
     public int length() {
         int size = 0;
         boolean firstBlock = true;
-        for (TRS80TapeBlock block : blocks) {
+        for (TapeBlock block : blocks) {
             if (!firstBlock)
                 size += block.getLength();
 
@@ -85,7 +79,7 @@ public class TRS80TapeFile extends TapeFile {
             filename.append(blocks.get(0).getFilename().trim());
 
         filename.append(".").append(headerBlockDescribesFileOfType().toString().toLowerCase());
-        if (headerBlockDescribesFileOfType() == TRS80TapeBlock.BlockType.MACHINE_CODE)
+        if (headerBlockDescribesFileOfType() == TapeBlock.FileDataType.MACHINE_CODE)
             filename.append(".").append(blocks.get(0).getLoadAddressIfThisIsMachineCode());
 
         return filename.toString();
@@ -114,7 +108,7 @@ public class TRS80TapeFile extends TapeFile {
         if (blocks.size() == 1)
             firstBlock = false;
 
-        for (TRS80TapeBlock block : blocks) {
+        for (TapeBlock block : blocks) {
             if (!firstBlock)
                 data.addAll(block.getDataAsList());
 
@@ -126,24 +120,42 @@ public class TRS80TapeFile extends TapeFile {
 
     private byte [] getASCIIData() {
         switch(headerBlockDescribesFileOfType()) {
-            case ASCII:
-                return getBinaryData();
-
-            case BASIC_PROGRAM:
+            case BASIC:
                 return getASCIIFromBasicProgram();
 
-            case HEADER:
+            default:
+            case DATA:
             case MACHINE_CODE:
             case UNKNOWN:
-            default:
                 return convertBinaryDataToASCII();
         }
     }
 
     private byte [] getASCIIFromBasicProgram() {
-        // TODO: implement MSX basic program decoding
-        // For the time being, just convert binary
-        return convertBinaryDataToASCII();
+        BasicProgram.ProgramType programType;
+        if (ASCIIFlagIsSet()) {
+            return convertBinaryDataToASCII();
+        }
+
+        switch (fileType) {
+            case DRAGON32:
+                programType = BasicProgram.ProgramType.DRAGON;
+                break;
+            case TRS80:
+            default:
+                programType = BasicProgram.ProgramType.COCO;
+                break;
+        }
+
+        BasicProgram basicProgram = new BasicProgram(getBinaryData(), programType);
+        return basicProgram.toString().getBytes();
+    }
+
+    private boolean ASCIIFlagIsSet() {
+        if (blocks.size() < 1)
+            return false;
+
+        return blocks.get(0).ASCIIFlagIsSet();
     }
 
     private byte [] convertBinaryDataToASCII() {
@@ -166,40 +178,42 @@ public class TRS80TapeFile extends TapeFile {
         switch (formatType) {
             case BINARY:
             default:
-                return "msx.bin";
+                return getExtension() + ".bin";
             case EMULATOR:
-                return "msx.emulator";
+                return getExtension() + ".emulator";
             case READABLE:
-                return "msx.txt";
+                return getExtension() + ".txt";
         }
     }
 
     @Override
     public String getExtension() {
-        return null;
+        switch (fileType) {
+            case DRAGON32:
+                return "dragon32";
+            case TRS80:
+            default:
+                return "trs80";
+        }
     }
 
     @Override
     public boolean containsErrors() {
-        return atLeastOneError;
+        if (atLeastOneError)
+            return true;
+
+        for (TapeBlock block : blocks)
+            if (block.blockHasErrors())
+                return true;
+
+        return false;
     }
 
-    public boolean isOrphanHeader() {
-        return headerBlockDescribesFileOfType() == TRS80TapeBlock.BlockType.UNKNOWN;
-    }
-
-    private TRS80TapeBlock.BlockType headerBlockDescribesFileOfType() {
+    private TapeBlock.FileDataType headerBlockDescribesFileOfType() {
         if (blocks.size() < 1)
-            return TRS80TapeBlock.BlockType.UNKNOWN;
+            return TapeBlock.FileDataType.UNKNOWN;
         else
-            return blocks.get(0).getTypeOfNextBlockIfThisIsAHeader();
-    }
-
-    public TRS80TapeBlock.BlockType nextBlockType() {
-        if (blocks.size() < 1)
-            return TRS80TapeBlock.BlockType.HEADER;
-        else
-            return headerBlockDescribesFileOfType();
+            return blocks.get(0).getFileDataTypeIfthisIsNameFile();
     }
 
     @Override
@@ -220,10 +234,13 @@ public class TRS80TapeFile extends TapeFile {
         if (o == null)
             return false;
 
-        if (!(o instanceof TRS80TapeFile))
+        if (!(o instanceof TapeFile))
             return false;
 
-        TRS80TapeFile other = (TRS80TapeFile) o;
+        if (fileType != ((TapeFile) o).fileType)
+            return false;
+
+        TapeFile other = (TapeFile) o;
         if (getFilename() != null && !getFilename().equals(other.getFilename()))
             return false;
 
@@ -240,7 +257,7 @@ public class TRS80TapeFile extends TapeFile {
 
         byte [] data = getDataBytesOfType(FormatType.BINARY);
         if (data != null)
-            code ^= data.hashCode();
+            code ^= Arrays.hashCode(data);
 
         String filename = getFilename();
         if (filename != null)

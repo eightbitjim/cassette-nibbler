@@ -26,18 +26,18 @@ import com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction.FileStateM
 import com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction.TapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.TRS80.PulseExtraction.TRS80PulseExtractor;
 
-public class TRS80 extends Platform {
+public class Dragon32 extends Platform {
     LowPass lowPass = new LowPass(3000);
     HighPass highPass = new HighPass(800);
     ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
     TRS80PulseExtractor pulseExtractor = new TRS80PulseExtractor();
-    FileStateMachine fileExtractor = new FileStateMachine(TapeFile.FileType.TRS80);
+    FileStateMachine fileExtractor = new FileStateMachine(TapeFile.FileType.DRAGON32);
 
-    public TRS80() {
+    public Dragon32() {
         super();
 
-        name = "trs80";
-        description = "TRS-80";
+        name = "dragon32";
+        description = "Dragon 32";
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

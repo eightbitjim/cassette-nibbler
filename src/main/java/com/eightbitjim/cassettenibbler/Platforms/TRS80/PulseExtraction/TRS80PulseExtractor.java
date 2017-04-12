@@ -67,8 +67,8 @@ public class TRS80PulseExtractor implements IntervalStreamConsumer, PulseStreamP
         mediumPulseLength = shortPulseLength * 2.0;
         longPulseLength = mediumPulseLength * 4.0;
 
-        shortPulseMinimum = shortPulseLength / 2.0;
-        mediumPulseMinimum = shortPulseLength + shortPulseLength / 3.0;
+        shortPulseMinimum = shortPulseLength / 3.0;
+        mediumPulseMinimum = shortPulseLength + shortPulseLength / 2.0;
         longPulseMinimum = longPulseLength - shortPulseLength / 2.0;
         longPulseMaximum = longPulseLength + (longPulseLength * 2.0);
     }
@@ -78,8 +78,6 @@ public class TRS80PulseExtractor implements IntervalStreamConsumer, PulseStreamP
         if (interval.transitionedToHigh)
             return;
 
-    //    registerWithLeaderBuffer();
-
         char pulseType = getPulseType();
         recordPulseLength(pulseType);
         pushPulseToConsumers(pulseType);
@@ -87,36 +85,9 @@ public class TRS80PulseExtractor implements IntervalStreamConsumer, PulseStreamP
         secondsSinceLastHighToLowTransition = 0.0;
     }
 
-  /*  private void registerWithLeaderBuffer() {
-        leaderBuffer[leaderBufferPointer] = secondsSinceLastHighToLowTransition;
-        leaderBufferPointer = (leaderBufferPointer + 1 ) % LEADER_BUFFER_LENGTH;
-        adjustFreqncyIfValidLeaderBuffer();
-    }
-*/
     private void recordPulseLength(char pulseType) {
     }
-/*
-    private void adjustFreqncyIfValidLeaderBuffer() {
-        double lastValue = leaderBuffer[0];
-        double sum = lastValue;
-        for (int i = 1; i < LEADER_BUFFER_LENGTH; i++) {
-            double differenceFromLastPulseLength = Math.abs(leaderBuffer[i] - lastValue);
-            lastValue = leaderBuffer[i];
-            sum += lastValue;
-            if (differenceFromLastPulseLength / lastValue * 100.0 > percentageDifferenceNotToCountAsSamePulseLength) {
-                return;
-            }
-        }
 
-        double average = sum / (double)LEADER_BUFFER_LENGTH;
-        if ((average < shortPulseLength - shortPulseLength * toleranceForPulseCountingAsLeader
-                || average > shortPulseLength + shortPulseLength * toleranceForPulseCountingAsLeader)) {
-            return;
-        }
-
-        intervalShiftMultiplier = shortPulseLength / average;
-    }
-*/
     public char getPulseType() {
         if (secondsSinceLastHighToLowTransition * intervalShiftMultiplier < shortPulseMinimum) return PulseStreamConsumer.INVALID_PULSE_TOO_SHORT;
         if (secondsSinceLastHighToLowTransition * intervalShiftMultiplier < mediumPulseMinimum) return PulseStreamConsumer.SHORT_PULSE;

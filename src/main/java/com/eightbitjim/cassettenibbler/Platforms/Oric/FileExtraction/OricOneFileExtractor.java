@@ -28,13 +28,17 @@ import com.eightbitjim.cassettenibbler.PulseStreamConsumer;
 import java.util.LinkedList;
 import java.util.List;
 
-public class OricFileExtractor implements FileStreamProvider, PulseStreamConsumer {
+public class OricOneFileExtractor implements FileStreamProvider, PulseStreamConsumer {
     private List<FileStreamConsumer> fileStreamConsumers = new LinkedList<>();
 
     private long currentTimeIndex;
     private char currentPulse;
     private TapeFile currentFile;
-    private OricFileStateMachine stateMachine = new OricFileStateMachine();
+    protected OricFileStateMachine stateMachine;
+
+    public OricOneFileExtractor() {
+        stateMachine = new OricFileStateMachine(OricTapeFile.FileType.ORIC_ONE);
+    }
 
     @Override
     public void registerFileStreamConsumer(FileStreamConsumer consumer) {

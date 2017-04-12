@@ -21,9 +21,12 @@ package com.eightbitjim.cassettenibbler.Platforms.TRS80;
 import com.eightbitjim.cassettenibbler.PlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.MSX.Platforms.MSX1200;
 import com.eightbitjim.cassettenibbler.Platforms.MSX.Platforms.MSX2400;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.Platforms.Dragon32;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.Platforms.TRS80;
 
 public class TRS80PlatformProvider extends PlatformProvider {
     public TRS80PlatformProvider() {
-// TODO
+        add(new TRS80());
+        add(new Dragon32());
     }
 }

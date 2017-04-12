@@ -28,6 +28,8 @@ import java.util.Arrays;
 public class OricTapeFile extends TapeFile {
     public enum State { RECEIVING_HEADER, HEADER_ERROR, RECEIVING_DATA, DATA_ERROR, COMPLETE }
 
+    public enum FileType { ORIC_ONE, ORIC_ATMOS }
+
     private static final int MAXIMUM_HEADER_BUFFER_SIZE = 1024;
 
     private static final int PROGRAM_TYPE_POSITION = 2;
@@ -43,6 +45,7 @@ public class OricTapeFile extends TapeFile {
     private byte [] dataBuffer;
     private String filename;
     private boolean errorInFile;
+    private FileType fileType;
 
     private State state;
     private int currentByte;
@@ -50,10 +53,11 @@ public class OricTapeFile extends TapeFile {
     private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
-    public OricTapeFile() {
+    public OricTapeFile(FileType type) {
         state = State.RECEIVING_HEADER;
         headerBuffer = new byte[MAXIMUM_HEADER_BUFFER_SIZE];
         errorInFile = false;
+        fileType = type;
     }
 
     @Override
@@ -78,6 +82,9 @@ public class OricTapeFile extends TapeFile {
             return false;
 
         OricTapeFile other = (OricTapeFile)o;
+        if (fileType != other.fileType)
+            return false;
+
         if (!Arrays.equals(headerBuffer, other.headerBuffer))
             return false;
 
@@ -132,7 +139,14 @@ public class OricTapeFile extends TapeFile {
 
     @Override
     public String getExtension() {
-        return "oric";
+
+        switch (fileType) {
+            case ORIC_ONE:
+                return "oric1";
+            case ORIC_ATMOS:
+            default:
+                return "oricAtmos";
+        }
     }
 
     @Override
@@ -272,11 +286,11 @@ public class OricTapeFile extends TapeFile {
         switch (formatType) {
             case BINARY:
             default:
-                return "oric.bin";
+                return getExtension() + ".bin";
             case EMULATOR:
-                return "oric.tap";
+                return getExtension() + ".tap";
             case READABLE:
-                return "oric.txt";
+                return getExtension() + ".txt";
         }
     }
 
