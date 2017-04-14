@@ -23,17 +23,17 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossi
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.Amplify;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.HighPass;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
-import com.eightbitjim.cassettenibbler.Platforms.Oric.FileExtraction.OricFileExtractor;
+import com.eightbitjim.cassettenibbler.Platforms.Oric.FileExtraction.OricAtmosFileExtractor;
+import com.eightbitjim.cassettenibbler.Platforms.Oric.FileExtraction.OricOneFileExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.Oric.PulseExtraction.OricPulseExtractor;
 
 public class OricAtmos extends Platform {
-
     LowPass lowPass = new LowPass(4800);
     HighPass highPass = new HighPass(200);
     Amplify inverter = new Amplify(-1.0);
     ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
     OricPulseExtractor pulseExtractor = new OricPulseExtractor();
-    OricFileExtractor fileExtractor = new OricFileExtractor();
+    OricAtmosFileExtractor fileExtractor = new OricAtmosFileExtractor();
 
     public OricAtmos() {
         super();

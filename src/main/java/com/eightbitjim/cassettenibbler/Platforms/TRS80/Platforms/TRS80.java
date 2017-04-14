@@ -16,38 +16,36 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Oric.Platforms;
+package com.eightbitjim.cassettenibbler.Platforms.TRS80.Platforms;
 
 import com.eightbitjim.cassettenibbler.Platform;
 import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossingIntervalExtractor;
-import com.eightbitjim.cassettenibbler.Platforms.General.Filters.Amplify;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.HighPass;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
-import com.eightbitjim.cassettenibbler.Platforms.Oric.FileExtraction.OricOneFileExtractor;
-import com.eightbitjim.cassettenibbler.Platforms.Oric.PulseExtraction.OricPulseExtractor;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction.FileStateMachine;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction.TapeFile;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.PulseExtraction.TRS80PulseExtractor;
 
-public class Oric1 extends Platform {
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    Amplify inverter = new Amplify(-1.0);
+public class TRS80 extends Platform {
+    LowPass lowPass = new LowPass(3000);
+    HighPass highPass = new HighPass(800);
     ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    OricPulseExtractor pulseExtractor = new OricPulseExtractor();
-    OricOneFileExtractor fileExtractor = new OricOneFileExtractor();
+    TRS80PulseExtractor pulseExtractor = new TRS80PulseExtractor();
+    FileStateMachine fileExtractor = new FileStateMachine(TapeFile.FileType.TRS80);
 
-    public Oric1() {
+    public TRS80() {
         super();
 
-        name = "oric1";
-        description = "Tangerine Computer Systems Oric 1";
+        name = "trs80";
+        description = "TRS-80";
 
         lowPass.registerSampleStreamConsumer(highPass);
-        highPass.registerSampleStreamConsumer(inverter);
-        inverter.registerSampleStreamConsumer(intervalExtractor);
+        highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);
 
         sampleInput = lowPass;
-        postFilterSampleInput = inverter;
+        postFilterSampleInput = intervalExtractor;
         intervalInput = pulseExtractor;
         pulseInput = fileExtractor;
 

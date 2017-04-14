@@ -32,6 +32,7 @@ import com.eightbitjim.cassettenibbler.Platforms.MSX.MSXPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Oric.OricPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Sinclair.SinclairPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Automatic.AutomaticPlatformProvider;
+import com.eightbitjim.cassettenibbler.Platforms.TRS80.TRS80PlatformProvider;
 import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -621,6 +622,7 @@ public class ExtractFile {
         addSinclairPlatforms();
         addOricPlatforms();
         addMSXPlatforms();
+        addTRS80Platforms();
         addAmstradPlatforms();
         addAnalysisPlatforms();
     }
@@ -653,6 +655,11 @@ public class ExtractFile {
     private void addAmstradPlatforms() {
         Collection<Platform> amstradPlatforms = new AmstradPlatformProvider().getPlatforms();
         availablePlatforms.addAll(amstradPlatforms);
+    }
+
+    private void addTRS80Platforms() {
+        Collection<Platform> trs80Platforms = new TRS80PlatformProvider().getPlatforms();
+        availablePlatforms.addAll(trs80Platforms);
     }
 
     private void addAnalysisPlatforms() {
