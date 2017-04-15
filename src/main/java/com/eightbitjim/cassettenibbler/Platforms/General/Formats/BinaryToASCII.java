@@ -19,19 +19,31 @@
 package com.eightbitjim.cassettenibbler.Platforms.General.Formats;
 
 public class BinaryToASCII {
-    public static byte [] convert(byte [] binaryData) {
+    public static byte [] removeUnprintableCharactersFrombinaryCharacterArray(byte [] binaryData) {
         byte [] outputData = new byte[binaryData.length];
         int position = 0;
         for (byte b : binaryData) {
             byte valueToStore;
-            valueToStore = b;
-            if (!Character.isLetterOrDigit((char)b))
-                valueToStore = '~';
+            valueToStore = (byte)getPrintableCharacterForBinaryCharacterCode(b);
 
             outputData[position] = valueToStore;
             position++;
         }
 
         return outputData;
+    }
+
+    public static char getPrintableCharacterForBinaryCharacterCode(byte code) {
+        char convertedValue = (char)code;
+        if (Character.isLetterOrDigit(convertedValue))
+            return convertedValue;
+
+        if (convertedValue == 0x0a || convertedValue == 0x0d)
+            return convertedValue;
+
+        if (convertedValue >= 0x20 && convertedValue < 0x80)
+            return convertedValue;
+
+        return '~';
     }
 }

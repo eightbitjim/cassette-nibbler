@@ -293,12 +293,15 @@ public class FileStateMachine implements PulseStreamConsumer, FileStreamProvider
     }
 
     private void pushFileAndStartNewOne() {
-        if (currentFile.length() < minimumFileSizeInBytes) {
-            logging.writeFileParsingInformation("File is too short so not storing.");
-            return;
+        if (currentFile != null) {
+            if (currentFile.length() < minimumFileSizeInBytes) {
+                logging.writeFileParsingInformation("File is too short so not storing.");
+                return;
+            }
+
+            fileStack.add(currentFile);
         }
 
-        fileStack.add(currentFile);
         currentFile = new AmstradTapeFile();
     }
 
