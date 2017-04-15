@@ -29,7 +29,7 @@ public class TapeBlock {
     public enum BlockType { DATA, END_OF_FILE, NAMEFILE, UNKNOWN }
     public enum FileDataType { DATA, BASIC, MACHINE_CODE, UNKNOWN }
 
-    private List<Byte> data;
+    private List<Byte> rawBlockBytes;
     private transient int bytesReceived;
     private boolean errors;
     private int checksum;
@@ -58,7 +58,7 @@ public class TapeBlock {
     private TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
     public TapeBlock() {
-        data = new ArrayList<>();
+        rawBlockBytes = new ArrayList<>();
         bytesReceived = 0;
         errors = false;
         checksum = 0;
@@ -66,7 +66,7 @@ public class TapeBlock {
     }
 
     public void addByte(byte b) {
-        data.add(b);
+        rawBlockBytes.add(b);
         bytesReceived++;
         addByteToChecksum(b);
         checkForMalformedNamefileBlock();
@@ -111,7 +111,7 @@ public class TapeBlock {
     }
 
     private int oneByteValueAt(int position) {
-        return Byte.toUnsignedInt(data.get(position));
+        return Byte.toUnsignedInt(rawBlockBytes.get(position));
     }
 
     private int twoByteValueAt(int position) {
@@ -142,9 +142,9 @@ public class TapeBlock {
     }
 
     public byte [] getDataAsArray() {
-        byte [] array = new byte[data.size()];
+        byte [] array = new byte[rawBlockBytes.size()];
         int position = 0;
-        for (Byte b : data) {
+        for (Byte b : rawBlockBytes) {
             array[position] = b;
             position++;
         }
@@ -152,15 +152,63 @@ public class TapeBlock {
         return array;
     }
 
-    public List<Byte> getDataAsList() {
+    public List<Byte> getPayloadDataAsList() {
+        List<Byte> payloadData = new ArrayList<>();
+        if (rawBlockBytes.size() > 3) {
+            int position = 0;
+            int payloadDataStartPosition = 2;
+            int checksumPosition = rawBlockBytes.size() - 1;
+            for (Byte value : rawBlockBytes) {
+                if (position >= payloadDataStartPosition && position < checksumPosition)
+                    payloadData.add(value);
+
+                position++;
+            }
+        }
+
+        return payloadData;
+    }
+
+    public List<Byte> getBlockDataAsList() {
+        return rawBlockBytes;
+    }
+
+    public List<Byte> getEmulatorDataAsList() {
+        List<Byte> data = new ArrayList<>();
+        addLeaderSequenceTo(data);
+        addBlockStarTo(data);
+        data.addAll(getBlockDataAsList());
+        addTrailerSequenceTo(data);
         return data;
     }
 
+    private void addLeaderSequenceTo(List<Byte> data) {
+        int numberOfLeaderBytes = 0x80;
+        final byte syncByteValue = 0x55;
+
+        for (;numberOfLeaderBytes > 0; numberOfLeaderBytes--) {
+            data.add(syncByteValue);
+        }
+    }
+
+    private void addTrailerSequenceTo(List<Byte> data) {
+        final byte syncByteValue = 0x55;
+        data.add(syncByteValue);
+    }
+
+    private void addBlockStarTo(List<Byte> data) {
+        final byte blockStartMarker = 0x55;
+        final byte syncByte = 0x3c;
+
+        data.add(blockStartMarker);
+        data.add(syncByte);
+    }
+
     public int getLength() {
-        if (data == null || data.size() < 3)
+        if (rawBlockBytes == null || rawBlockBytes.size() < 3)
             return 0;
 
-        return data.size() - 3;
+        return rawBlockBytes.size() - 3;
     }
 
     public String getFilename() {
@@ -209,7 +257,7 @@ public class TapeBlock {
 
         StringBuilder name = new StringBuilder();
         for (int pos = FILENAME_START_POSITION + 2; pos < FILENAME_LENGTH + FILENAME_START_POSITION + 2; pos++)
-            name.append((char)(int)data.get(pos));
+            name.append((char)(int) rawBlockBytes.get(pos));
 
         return name.toString();
     }

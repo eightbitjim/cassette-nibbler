@@ -55,21 +55,12 @@ public class BasicProgram {
 
         StringBuilder builder = new StringBuilder();
         String currentLine;
-        discardInitialHeader();
         do {
             currentLine = readLine();
             if (currentLine != null)
                 builder.append(currentLine + "\n");
         } while (currentLine != null);
         return builder.toString();
-    }
-
-    private void discardInitialHeader() {
-        try {
-            getTwoByteValue();
-        } catch (IOException e) {
-
-        }
     }
 
     public void close() throws IOException {
