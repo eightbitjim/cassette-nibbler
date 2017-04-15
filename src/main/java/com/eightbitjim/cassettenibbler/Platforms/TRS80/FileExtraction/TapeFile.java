@@ -90,6 +90,9 @@ public class TapeFile extends com.eightbitjim.cassettenibbler.TapeFile {
         byte [] data = null;
         switch (formatType) {
             case EMULATOR:
+                data = getEmulatorFileData();
+                break;
+
             case BINARY:
                 data = getBinaryData();
                 break;
@@ -102,17 +105,27 @@ public class TapeFile extends com.eightbitjim.cassettenibbler.TapeFile {
         return data;
     }
 
+    private byte [] getEmulatorFileData() {
+        List <Byte> data = new ArrayList<>();
+        for (TapeBlock block : blocks) {
+            data.addAll(block.getEmulatorDataAsList());
+        }
+
+        return convertToByteArray(data);
+    }
+
     private byte [] getBinaryData() {
         List <Byte> data = new ArrayList<>();
-        boolean firstBlock = true;
-        if (blocks.size() == 1)
-            firstBlock = false;
-
         for (TapeBlock block : blocks) {
-            if (!firstBlock)
-                data.addAll(block.getDataAsList());
-
-            firstBlock = false;
+            switch (block.getType()) {
+                case DATA:
+                case UNKNOWN:
+                    data.addAll(block.getPayloadDataAsList());
+                    break;
+                case END_OF_FILE:
+                case NAMEFILE:
+                    break;
+            }
         }
 
         return convertToByteArray(data);
@@ -180,7 +193,7 @@ public class TapeFile extends com.eightbitjim.cassettenibbler.TapeFile {
             default:
                 return getExtension() + ".bin";
             case EMULATOR:
-                return getExtension() + ".emulator";
+                return getExtension() + ".CAS";
             case READABLE:
                 return getExtension() + ".txt";
         }
