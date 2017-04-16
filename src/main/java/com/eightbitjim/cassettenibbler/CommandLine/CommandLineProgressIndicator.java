@@ -24,6 +24,7 @@ import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 public class CommandLineProgressIndicator implements FileStreamConsumer {
     private int progressPercent;
+    private String progressMessage;
     private String message;
     private int filesExtracted;
     private boolean indicatorAlreadyDisplayed;
@@ -35,23 +36,25 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     public CommandLineProgressIndicator(String title) {
         progressPercent = 0;
         message = "";
+        progressMessage = title;
         filesExtracted = 0;
         indicatorAlreadyDisplayed = false;
         canMoveCursorUp = !isWindows();
-        printTitle(title);
+        printTitle();
     }
 
-    private void printTitle(String title) {
-        System.err.print(title);
-        if (title.length() < maxWidth) {
-            for (int i = title.length(); i < maxWidth; i++)
+    private void printTitle() {
+        System.err.print(progressMessage);
+        if (progressMessage.length() < maxWidth) {
+            for (int i = progressMessage.length(); i < maxWidth; i++)
                 System.err.print("-");
             System.err.println();
         }
     }
 
-    public void setProgressPercent(int percent) {
+    public void setProgressPercent(int percent, String progressMessage) {
         progressPercent = percent;
+        this.progressMessage = progressMessage;
         updateDisplay();
     }
 
@@ -69,16 +72,17 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
 
     private void updateDisplayIfCursorControlNotAvailable() {
         StringBuilder builder = new StringBuilder();
-        builder.append(progressPercent).append("%");
+        builder.append(progressPercent).append("%: ");
+        if (progressMessage.length() > 0)
+            builder.append(progressMessage).append(" ");
 
-        builder.append(" (").append(filesExtracted).append(" file").append(filesExtracted == 1 ? "" : "s");
+        builder.append("(").append(filesExtracted).append(" file").append(filesExtracted == 1 ? "" : "s");
         builder.append(" extracted)");
 
-        if (message.length() > 0)
-            builder.append(": ").append(message);
+        if (progressMessage.length() > 0)
+            builder.append(": ").append(progressMessage);
 
         message = "";
-
         String outputString = builder.toString();
         outputString = PrintableString.convertToPrintable(outputString);
 
@@ -90,8 +94,12 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     }
 
     private void updateDisplayIfCursorControlAvailable() {
-        if (indicatorAlreadyDisplayed)
+        if (indicatorAlreadyDisplayed) {
             moveUpALine();
+            moveUpALine();
+            moveUpALine();
+            printTitle();
+        }
 
         indicatorAlreadyDisplayed = true;
         int progressWidth = 77;
@@ -104,7 +112,7 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
         for (; i < amountFilled; i++)
             progressBar.append('#');
 
-        for (; i < progressWidth; i++)
+        while (progressBar.length() < progressWidth + 1)
             progressBar.append(' ');
 
         progressBar.append("]");
@@ -125,7 +133,6 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     }
 
     private void moveUpALine() {
-        System.err.print(ANSI_CSI_UP_LINE + ANSI_CSI_ERASE_LINE);
         System.err.print(ANSI_CSI_UP_LINE + ANSI_CSI_ERASE_LINE);
     }
 

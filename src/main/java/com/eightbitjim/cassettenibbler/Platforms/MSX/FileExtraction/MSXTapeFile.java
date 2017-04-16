@@ -142,12 +142,12 @@ public class MSXTapeFile extends TapeFile {
 
     private byte [] getASCIIFromBasicProgram() {
         // TODO: implement MSX basic program decoding
-        // For the time being, just convert binary
+        // For the time being, just removeUnprintableCharactersFrombinaryCharacterArray binary
         return convertBinaryDataToASCII();
     }
 
     private byte [] convertBinaryDataToASCII() {
-        return BinaryToASCII.convert(getBinaryData());
+        return BinaryToASCII.removeUnprintableCharactersFrombinaryCharacterArray(getBinaryData());
     }
 
     private byte [] convertToByteArray(List <Byte> list) {

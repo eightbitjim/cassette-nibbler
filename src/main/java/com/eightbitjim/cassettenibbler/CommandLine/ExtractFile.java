@@ -23,6 +23,7 @@ import com.eightbitjim.cassettenibbler.DataSink.AudioFileOutput;
 import com.eightbitjim.cassettenibbler.DataSink.Directory;
 import com.eightbitjim.cassettenibbler.DataSource.AudioInputLibrary.AudioInput;
 import com.eightbitjim.cassettenibbler.Platforms.Amstrad.AmstradPlatformProvider;
+import com.eightbitjim.cassettenibbler.Platforms.Apple.ApplePlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.CommodorePlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.*;
 import com.eightbitjim.cassettenibbler.DataSource.DummySampleSource;
@@ -129,11 +130,11 @@ public class ExtractFile {
         counter = new TimeCounter();
         configureProgessIndicator();
 
-        List <InputStream> streamList = getDataStreamList();
-        for (InputStream stream : streamList) {
+        List <InputStreamSource> streamList = getDataStreamList();
+        for (InputStreamSource source : streamList) {
             fileCount++;
-            updateProgressPercent(fileCount * 100 / numberOfFiles);
-            inputStream = stream;
+            updateProgressPercent(fileCount * 100 / numberOfFiles, source.getName());
+            inputStream = source.getStream();
             extractFromInputStream();
             inputStream.close();
         }
@@ -141,11 +142,11 @@ public class ExtractFile {
         printOrGetFilesFromDirecotry();
     }
 
-    private void updateProgressPercent(int percent) {
+    private void updateProgressPercent(int percent, String progressMessage) {
         if (progressIndicator == null)
             return;
 
-        progressIndicator.setProgressPercent(percent);
+        progressIndicator.setProgressPercent(percent, progressMessage);
     }
 
     private void extractFromInputStream() throws IOException, PlatformAccessError, UnsupportedAudioFileException {
@@ -578,15 +579,16 @@ public class ExtractFile {
         }
     }
 
-    private List <InputStream> getDataStreamList() throws FileNotFoundException {
-        List <InputStream> streamList = new LinkedList<>();
+    private List <InputStreamSource> getDataStreamList() throws FileNotFoundException {
+        List <InputStreamSource> streamList = new LinkedList<>();
         if (inputFilenames.isEmpty()) {
-            streamList.add(System.in);
+            streamList.add(new InputStreamSource(System.in, "standard input"));
         } else {
             int count = 1;
             for (String filename : inputFilenames) {
                 count++;
-                streamList.add(new BufferedInputStream(new FileInputStream(filename)));
+                InputStreamSource source = new InputStreamSource(new BufferedInputStream(new FileInputStream(filename)), filename);
+                streamList.add(source);
             }
         }
 
@@ -623,6 +625,7 @@ public class ExtractFile {
         addOricPlatforms();
         addMSXPlatforms();
         addTRS80Platforms();
+        addApplePlatforms();
         addAmstradPlatforms();
         addAnalysisPlatforms();
     }
@@ -660,6 +663,11 @@ public class ExtractFile {
     private void addTRS80Platforms() {
         Collection<Platform> trs80Platforms = new TRS80PlatformProvider().getPlatforms();
         availablePlatforms.addAll(trs80Platforms);
+    }
+
+    private void addApplePlatforms() {
+        Collection<Platform> applePlatforms = new ApplePlatformProvider().getPlatforms();
+        availablePlatforms.addAll(applePlatforms);
     }
 
     private void addAnalysisPlatforms() {

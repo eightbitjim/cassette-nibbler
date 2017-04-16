@@ -172,7 +172,7 @@ public class TapeFile extends com.eightbitjim.cassettenibbler.TapeFile {
     }
 
     private byte [] convertBinaryDataToASCII() {
-        return BinaryToASCII.convert(getBinaryData());
+        return BinaryToASCII.removeUnprintableCharactersFrombinaryCharacterArray(getBinaryData());
     }
 
     private byte [] convertToByteArray(List <Byte> list) {
