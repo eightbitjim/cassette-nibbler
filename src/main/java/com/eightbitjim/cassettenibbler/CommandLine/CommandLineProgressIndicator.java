@@ -44,12 +44,15 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     }
 
     private void printTitle() {
-        System.err.print(progressMessage);
-        if (progressMessage.length() < maxWidth) {
+        if (progressMessage.length() <= maxWidth) {
+            System.err.print(progressMessage);
             for (int i = progressMessage.length(); i < maxWidth; i++)
                 System.err.print("-");
-            System.err.println();
+        } else {
+            System.err.print(progressMessage.substring(progressMessage.length() - maxWidth));
         }
+
+        System.err.println();
     }
 
     public void setProgressPercent(int percent, String progressMessage) {
