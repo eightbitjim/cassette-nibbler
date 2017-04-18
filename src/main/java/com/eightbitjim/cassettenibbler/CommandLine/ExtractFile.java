@@ -549,18 +549,9 @@ public class ExtractFile {
         byte [] data = file.getDataBytesOfType(formatType);
         if (data != null) {
             try {
-                StringBuilder filename = new StringBuilder();
-                filename.append(file.getFilename());
-                filename.append(".").append(Integer.toHexString(file.hashCode()));
-                if (file.containsErrors())
-                    filename.append(".ERR");
+                String filename = getFilenameFor(file, formatType);
 
-                filename.append(".").append(file.getFileExtensionForType(formatType));
-
-                String completedFilename = filename.toString();
-                completedFilename = PrintableString.convertToSuitableFilename(completedFilename);
-
-                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(getFilePath(outputDirectory, completedFilename)));
+                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(getFilePath(outputDirectory, filename)));
                 outputStream.write(data);
                 outputStream.close();
             } catch (IOException e) {
@@ -569,11 +560,24 @@ public class ExtractFile {
         }
     }
 
+    private String getFilenameFor(TapeFile file, TapeFile.FormatType formatType) {
+        StringBuilder filename = new StringBuilder();
+        filename.append(file.getFilename());
+        filename.append(".").append(Integer.toHexString(file.hashCode()));
+        if (file.containsErrors())
+            filename.append(".ERR");
+
+        filename.append(".").append(file.getFileExtensionForType(formatType));
+
+        String completedFilename = filename.toString();
+        return PrintableString.convertToSuitableFilename(completedFilename);
+    }
+
     private void displayDirectoryContents() {
         List <TapeFile> files = directory.getList();
         int count = 0;
         for (TapeFile file : files) {
-            System.err.print("" + count + " " + file.getFilename() + ": " + file.length() + " bytes ");
+            System.err.print("" + count + " " + getFilenameFor(file, TapeFile.FormatType.BINARY)+ ": " + file.length() + " bytes ");
             System.err.println();
             count++;
         }
