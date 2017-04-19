@@ -62,9 +62,11 @@ public class SpectrumBasicProgram {
         }
 
         try {
-            int lineNumber = getNextLineAddress();
+            int lineNumber = getTwoByteValue();
             line.append(lineNumber);
             line.append(" ");
+
+            int twoByteValueToIgnore = getTwoByteValue();
 
             int currentByte;
             do {
@@ -91,7 +93,7 @@ public class SpectrumBasicProgram {
         return value;
     }
 
-    private int getNextLineAddress() throws IOException {
+    private int getTwoByteValue() throws IOException {
         int address = getNextByte() * 256 + getNextByte();
         return address;
     }
