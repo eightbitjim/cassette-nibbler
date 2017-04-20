@@ -55,6 +55,7 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
     private List<FileStreamConsumer> consumers;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
     private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private boolean errorDetectedSinceStartingThisFile;
 
     public ZX81FileExtract() {
         consumers = new LinkedList<>();
@@ -73,6 +74,7 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
         currentMemoryPosition = ZX81_START_ADDRESS;
         fileData.clear();
         filenameBuffer.clear();
+        errorDetectedSinceStartingThisFile = false;
     }
 
     public void processByte() {
@@ -130,6 +132,7 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
     }
 
     private void giveUpOnFileAfterError() {
+        errorDetectedSinceStartingThisFile = true;
         attemptToRecoverFile();
         currentState = WAITING_FOR_SILENCE;
     }
@@ -138,19 +141,25 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
         if (!options.getAttemptToRecoverCorruptedFiles())
             return;
 
-        TapeFile recoveredFile = constructTapeFileFromData();
-        if (recoveredFile != null)
+        ZX81TapeFile recoveredFile = constructTapeFileFromData();
+        if ((recoveredFile != null) && (recoveredFile.basicValesAreCorrect()))
             filesToReturn.push(recoveredFile);
+        else
+            logging.writeFileParsingInformation("Recovered file did not have expected key values, so discarding.");
     }
 
     private void checkForEndOfFile() {
         if (endAddressForFile > 0 && currentMemoryPosition == endAddressForFile - 1)
             currentState = FILE_COMPLETE;
+
+        if (endAddressForFile > 0 && currentMemoryPosition > endAddressForFile - 1)
+            currentState = ERROR;
     }
 
     private void dealWithFramingErrorByte() {
+        errorDetectedSinceStartingThisFile = true;
         logging.writeDataError(currentTimeIndex, "Framing error, leading to byte: " + nextByte);
-        if (!fileData.isEmpty() && !options.getAllowIncorrectFrameChecksums())
+        if (/*!fileData.isEmpty() && */!options.getAllowIncorrectFrameChecksums())
             giveUpOnFileAfterError();
         else {
             checkForEndOfFilename();
@@ -171,6 +180,7 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
     }
 
     private void dealWithErroneousByte() {
+        errorDetectedSinceStartingThisFile = true;
         logging.writeDataError(currentTimeIndex,"Erroneous byte: " + nextByte);
         if (!fileData.isEmpty() && !options.getAttemptToRecoverCorruptedFiles())
             giveUpOnFileAfterError();
@@ -188,7 +198,7 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
         logging.writeFileParsingInformation("Found end address for file: " + endAddressForFile);
     }
 
-    private TapeFile constructTapeFileFromData() {
+    private ZX81TapeFile constructTapeFileFromData() {
         if (fileData.isEmpty())
             return null;
 
@@ -199,6 +209,11 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
         ZX81TapeFile file = new ZX81TapeFile();
         file.setFilename(filename);
         file.setData(getFileData());
+        if (errorDetectedSinceStartingThisFile) {
+            file.hasAnError();
+            errorDetectedSinceStartingThisFile = false;
+        }
+
         return file;
     }
 
@@ -255,7 +270,8 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
     private void pushFileToConsumers() {
         for (TapeFile file : filesToReturn) {
             for (FileStreamConsumer consumer : consumers)
-                consumer.pushFile(file, currentTimeIndex);
+                if (file != null)
+                    consumer.pushFile(file, currentTimeIndex);
         }
 
         if (filesToReturn.size() > 0)

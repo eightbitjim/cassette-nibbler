@@ -139,6 +139,7 @@ public class ExtractFile {
             inputStream.close();
         }
 
+        printTimeCounter();
         printOrGetFilesFromDirecotry();
     }
 
@@ -147,6 +148,10 @@ public class ExtractFile {
             return;
 
         progressIndicator.setProgressPercent(percent, progressMessage);
+    }
+
+    private void printTimeCounter() {
+        updateProgressPercent(100, counter.toString());
     }
 
     private void extractFromInputStream() throws IOException, PlatformAccessError, UnsupportedAudioFileException {

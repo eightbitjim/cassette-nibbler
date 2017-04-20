@@ -45,8 +45,8 @@ public class ZX81 extends Platform {
         name = "zx81";
         description = "Sinclair ZX81, 1K and 16K";
 
-        double minVolume = -30.0;
-        double maxVolume = 60.0;
+        double minVolume = -10.0;
+        double maxVolume = 10.0;
         double volumeStep = 1.0;
 
         for (double volume = minVolume; volume < maxVolume; volume += volumeStep) {
@@ -61,7 +61,7 @@ public class ZX81 extends Platform {
             amplifier.setMultiplier(volume);
 
             intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
-            intervalExtractor.setThreasholdLine(-0.5);
+            intervalExtractor.setThreasholdLine(0.5);
 
             pulseExtractor.registerPulseStreamConsumer(byteExtractor);
             byteExtractor.registerByteStreamConsumer(fileExtractor);

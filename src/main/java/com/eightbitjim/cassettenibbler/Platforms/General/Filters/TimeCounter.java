@@ -25,8 +25,15 @@ public class TimeCounter implements SampleStreamConsumer {
     private static final double NANOSECOND = 1.0 / 1000000000.0;
     private static final long NANOSECONDS_IN_A_SECOND = 1000000000L;
 
-    long counter = 0L;
-    long lastCounterValue = 0L;
+    private long counter;
+    private long lastCounterValue;
+    private long systemTimeAtStartInMillis;
+
+    public TimeCounter() {
+        counter = 0L;
+        lastCounterValue = 0L;
+        systemTimeAtStartInMillis = System.currentTimeMillis();
+    }
 
     @Override
     public void push(Sample sample, double currentTimeIndex) {
@@ -44,21 +51,36 @@ public class TimeCounter implements SampleStreamConsumer {
 
     @Override
     public String toString() {
-        long seconds = getTimeInNanoSeconds() / NANOSECONDS_IN_A_SECOND;
-        if (seconds < 60)
-            return ""  + seconds + " second" + (seconds == 1 ? "" : "s");
+        long timeNow = System.currentTimeMillis();
+        long timeTakenInSeconds = (timeNow - systemTimeAtStartInMillis) / 1000L;
+        long amountOfDataProcessedInSeconds = getTimeInNanoSeconds() / NANOSECONDS_IN_A_SECOND;
+        double speedFactor = amountOfDataProcessedInSeconds / timeTakenInSeconds;
 
-        long minutes = seconds / 60;
-        seconds = seconds % 60;
+        long hours = hoursIn(amountOfDataProcessedInSeconds);
+        long minutes = minutesIn(amountOfDataProcessedInSeconds) % 60;
+        long seconds = amountOfDataProcessedInSeconds % 60;
 
-        if (minutes < 60)
-            return "" + minutes + " minute" + (minutes == 1 ? " " : "s ") +
-                    seconds + " second" + (seconds == 1 ? "" : "s");
+        StringBuilder builder = new StringBuilder();
+        builder.append("Processed ");
 
-        long hours = minutes / 60;
-        minutes = minutes % 60;
-        return "" + hours + " hour" + (hours == 1 ? " " : "s ") +
-                minutes + " minute" + (minutes == 1 ? " " : "s ") +
-                seconds + " second" + (seconds == 1 ? "" : "s");
+        if (hours > 0)
+            builder.append(hours).append(" hour").append(hours == 1 ? " " : "s ");
+
+        if (minutes > 0)
+            builder.append(minutes).append(" minute").append(hours == 1 ? " " : "s ");
+
+        builder.append(seconds).append(" second").append(hours == 1 ? " " : "s ");
+        builder.append("(" + speedFactor + "x realtime)");
+        return builder.toString();
     }
+
+    private long hoursIn(long numberOfSeconds) {
+        return minutesIn(numberOfSeconds) / 60;
+    }
+
+    private long minutesIn(long numberOfSeconds) {
+        return numberOfSeconds / 60;
+    }
+
+
 }
