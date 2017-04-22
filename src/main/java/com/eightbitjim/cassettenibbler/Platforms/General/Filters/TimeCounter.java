@@ -54,7 +54,9 @@ public class TimeCounter implements SampleStreamConsumer {
         long timeNow = System.currentTimeMillis();
         long timeTakenInSeconds = (timeNow - systemTimeAtStartInMillis) / 1000L;
         long amountOfDataProcessedInSeconds = getTimeInNanoSeconds() / NANOSECONDS_IN_A_SECOND;
-        double speedFactor = amountOfDataProcessedInSeconds / timeTakenInSeconds;
+        double speedFactor = Double.NaN;
+        if (timeTakenInSeconds != 0)
+            speedFactor = amountOfDataProcessedInSeconds / timeTakenInSeconds;
 
         long hours = hoursIn(amountOfDataProcessedInSeconds);
         long minutes = minutesIn(amountOfDataProcessedInSeconds) % 60;
@@ -70,7 +72,9 @@ public class TimeCounter implements SampleStreamConsumer {
             builder.append(minutes).append(" minute").append(hours == 1 ? " " : "s ");
 
         builder.append(seconds).append(" second").append(hours == 1 ? " " : "s ");
-        builder.append("(" + speedFactor + "x realtime)");
+        if (!Double.isNaN(speedFactor))
+            builder.append("(" + speedFactor + "x realtime)");
+
         return builder.toString();
     }
 
