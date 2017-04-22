@@ -52,11 +52,11 @@ public class TimeCounter implements SampleStreamConsumer {
     @Override
     public String toString() {
         long timeNow = System.currentTimeMillis();
-        long timeTakenInSeconds = (timeNow - systemTimeAtStartInMillis) / 1000L;
+        long timeTakenInMilliSeconds = timeNow - systemTimeAtStartInMillis;
         long amountOfDataProcessedInSeconds = getTimeInNanoSeconds() / NANOSECONDS_IN_A_SECOND;
         double speedFactor = Double.NaN;
-        if (timeTakenInSeconds != 0)
-            speedFactor = amountOfDataProcessedInSeconds / timeTakenInSeconds;
+        if (timeTakenInMilliSeconds != 0)
+            speedFactor = (amountOfDataProcessedInSeconds * 1000L) / timeTakenInMilliSeconds;
 
         long hours = hoursIn(amountOfDataProcessedInSeconds);
         long minutes = minutesIn(amountOfDataProcessedInSeconds) % 60;
