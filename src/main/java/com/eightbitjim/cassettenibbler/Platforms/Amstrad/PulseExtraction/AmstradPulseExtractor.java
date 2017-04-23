@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStreamProvider {
-    enum State { WAITING_FOR_PILOT_TONE, RECEIVING_PILOT_TONE, RECEIVING_DATA }
-
     private static final double NANOSECOND = 1.0 / 1000000000.0;
     private static final double TSTATE_IN_SECONDS = 1.0/3500000.0;
 
@@ -35,7 +33,6 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
     private static final int ONE_T_STATES = 2350;
 
     private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
-    private State state;
     private AmstradPilotToneDetection pilotToneDetection;
     private List<PulseStreamConsumer> consumers;
     private double intervalShiftMultiplier;
@@ -49,7 +46,6 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
         pilotToneDetection = new AmstradPilotToneDetection();
         currentTimeIndex = 0;
         intervalShiftMultiplier = 1.0;
-        state = State.WAITING_FOR_PILOT_TONE;
         secondTStateInWave = true;
     }
 
@@ -57,19 +53,7 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
         intervalShiftMultiplier = pilotToneDetection.registerWithPilotToneBufferAndReturnIntervalShift(currentTransitionLengthInTstates);
         adjustIntervalToMatchFrequencyShift();
         secondTStateInWave = !secondTStateInWave;
-        switch (state) {
-            case WAITING_FOR_PILOT_TONE:
-                checkForPilotTone();
-                break;
-
-            case RECEIVING_PILOT_TONE:
-                checkForEndOfPilotTone();
-                break;
-
-            case RECEIVING_DATA:
-                processDataPulse();
-                break;
-        }
+        processDataPulse();
 
         lastInterval = currentTransitionLengthInTstates;
     }
@@ -79,50 +63,9 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
         currentTransitionLengthInTstates = intervalAfterShift;
     }
 
-
-    private boolean countsAsSyncPulses(int pulse1, int pulse2) {
-        int toleranceInTStates = 300;
-        int totalLength = pulse1 + pulse2;
-        int targetLength = SYNC_PULSE_T_STATES_1 + SYNC_PULSE_T_STATES_2;
-
-        if (Math.abs(totalLength - targetLength) < toleranceInTStates)
-            return true;
-        else
-            return false;
-    }
-
-    private void checkForPilotTone() {
-        if (pilotToneDetection.pilotToneIsValid()) {
-            logging.writeFileParsingInformation("PILOT TONE DETECTED");
-            state = State.RECEIVING_PILOT_TONE;
-        }
-    }
-
-    private void checkForEndOfPilotTone() {
-        if (countsAsSyncPulses(lastInterval, currentTransitionLengthInTstates)) {
-            logging.writeFileParsingInformation("SYNC PULSES DETECTED");
-            generatePulse(PulseStreamConsumer.SHORT_PULSE);
-            state = State.RECEIVING_DATA;
-            secondTStateInWave = true;
-            return;
-        }
-
-
-        if (!pilotToneDetection.pilotToneIsValid()) {
-                logging.writeFileParsingInformation("LOST PILOT TONE");
-                state = State.WAITING_FOR_PILOT_TONE;
-                generatePulse(PulseStreamConsumer.SILENCE);
-                return;
-        }
-
-        if (secondTStateInWave)
-            generatePulse(PulseStreamConsumer.MEDIUM_PULSE);
-    }
-
     private void processDataPulse() {
         if (pilotToneDetection.pilotToneIsValid()) {
             logging.writeFileParsingInformation("PILOT TONE DETECTED");
-            state = State.RECEIVING_PILOT_TONE;
             return;
         }
 
