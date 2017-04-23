@@ -37,7 +37,7 @@ public class Dragon32 extends Platform {
         super();
 
         name = "dragon32";
-        description = "Dragon 32";
+        description = "Dragon 32 (experimental)";
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

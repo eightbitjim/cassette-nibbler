@@ -37,7 +37,7 @@ public class TRS80 extends Platform {
         super();
 
         name = "trs80";
-        description = "TRS-80";
+        description = "TRS-80 (experimental)";
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

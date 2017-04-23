@@ -54,6 +54,8 @@ public class Line {
             if (value == END_OF_LINE_MARKER)
                 break;
         }
+
+        Token.lineEnded();
     }
 
     private void processValue(int tokenValue) throws IOException {
@@ -78,6 +80,7 @@ public class Line {
             case 21:
             case 22:
             case 23:
+            case 24:
                 processIntegerNoValueByte(tokenValue);
                 return;
             case 25:
@@ -85,6 +88,18 @@ public class Line {
                 return;
             case 26:
                 processIntegerTwoValueBytes();
+                return;
+            case 27:
+                processBinaryIntegerValue();
+                return;
+            case 28:
+                processHexIntegerValue();
+                return;
+            case 29:
+                processLineMemoryAddressPointer();
+                return;
+            case 30:
+                processLineNumber();
                 return;
             case 31:
                 processFloatingPoint();
@@ -100,15 +115,36 @@ public class Line {
         builder.append(Token.getStringForTokenValue(tokenValue));
     }
 
+    private void processBinaryIntegerValue() throws IOException {
+        int valueRepresented = getTwoByteValue();
+        builder.append("%").append(Integer.toBinaryString(valueRepresented));
+    }
+
+    private void processHexIntegerValue() throws IOException {
+        int valueRepresented = getTwoByteValue();
+        builder.append("&").append(Integer.toHexString(valueRepresented));
+    }
+
+    private void processLineMemoryAddressPointer() {
+        builder.append("(memory address values not implemented)");
+    }
+
     private int getByteValue() throws IOException {
         if (inputStream.available() < 1)
             throw new IOException("End of file reached");
 
-        return inputStream.read();
+        int value = inputStream.read();
+      //  builder.append("(" + value + ")");
+        return value;
     }
 
     private int getTwoByteValue() throws IOException {
         return getByteValue() + getByteValue() * 0x100;
+    }
+
+    private void processLineNumber() throws IOException {
+        int lineNumber = getTwoByteValue();
+        builder.append(lineNumber);
     }
 
     private void processIntegerNoValueByte(int value) {

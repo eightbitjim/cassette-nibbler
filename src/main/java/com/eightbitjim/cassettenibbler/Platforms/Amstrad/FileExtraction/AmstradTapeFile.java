@@ -206,12 +206,10 @@ public class AmstradTapeFile extends TapeFile {
         HeaderSubsection.FileType type = getFileType();
         switch (type) {
             case ASCII:
+                return printableStringFromRawData();
             case BASIC:
-                return getRawData();
-
             case ENCRYPTED_BASIC:
                 return getBasicProgram();
-
             case BINARY:
             default:
                 return printableStringFromRawData();
@@ -227,7 +225,7 @@ public class AmstradTapeFile extends TapeFile {
         StringBuilder inputString = new StringBuilder();
         byte [] rawData = getRawData();
         for (byte b : rawData)
-            inputString.append(Byte.toUnsignedInt(b));
+            inputString.append((char)Byte.toUnsignedInt(b));
 
         String printableString = PrintableString.convertToPrintable(inputString.toString());
         return printableString.getBytes();

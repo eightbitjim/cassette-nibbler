@@ -37,13 +37,33 @@ public class Token {
     private static String [] highTokenArray = {
             "ABS", "ASC", "ATN", "CHR$", "CINT", "COS", "CREAL", "EXP", "FIX", "FRE", "INKEY", "INP", "INT",
             "JOY", "LEN", "LOG", "LOG10", "LOWER$", "PEEK", "REMAIN", "SGN", "SIN", "SPACE$", "SQ", "SQR",
-            "TAN", "UNT", "UPPER$", "VAL", "", "EOF", "ERR", "HIMEM", "INKEY$", "PI", "RND", "TIME", "XPOS",
-            "YPOS", "DERR", "", "BIN$", "DEC$", "HEX$", "INSTR", "LEFT$", "MAX", "MIN", "POS", "RIGHT$",
-            "ROUND", "STRING$", "TEST", "TESTR", "COPYCHR$", "VPOS", "note4"
+            "STR$", "TAN", "UNT", "UPPER$", "VAL",
+            // $1e to $3f not used
+            "(unused token)", "(unused token)", // $1e, $1f
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)",
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", // $20 to 2f
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)",
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", // $30 to 3f
+            "EOF", "ERR", "HIMEM", "INKEY$", "PI", "RND", "TIME", "XPOS",
+            "YPOS", "DERR",
+            // $4a to $70 not used
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", // $4a to 4f
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)",
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", // $50 to 5f
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)",
+            "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", "(unused token)", // $60 to 6f
+            "(unused token)", // $70
+            "BIN$", "DEC$", "HEX$", "INSTR", "LEFT$", "MAX", "MIN", "POS", "RIGHT$",
+            "ROUND", "STRING$", "TEST", "TESTR", "COPYCHR$", "VPOS"
     };
 
     private static boolean insideRemStatement;
     private static boolean insideQuote;
+
+    public static void lineEnded() {
+        insideRemStatement = false;
+        insideQuote = false;
+    }
 
     public static String getStringForTokenValue(int value) {
         boolean foundRemStatement = false;
@@ -80,12 +100,16 @@ public class Token {
         if (value < 0x7c)
             return "" + (char)value;
 
-        if (value < 255)
-            return lowTokenArray[value - 128];
+        if (value < 255) {
+            if (value - 128 >= 0 && value - 128 < lowTokenArray.length)
+                return lowTokenArray[value - 128];
+            else
+                return "*INVALIDTOKEN" + value + "*";
+        }
 
-        if (value <= 0x17f)
+        if (value - 256 >= 0 && value - 256 < highTokenArray.length)
             return highTokenArray[value - 256];
 
-        return "*INVALIDTOKEN*";
+        return "*INVALIDTOKEN" + value +"*";
     }
 }
