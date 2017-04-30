@@ -30,8 +30,10 @@ import java.util.LinkedList;
 public class LineInput implements SampleStreamProvider {
     private AudioFormat lineInputFormat;
     private LinkedList<SampleStreamConsumer> consumers;
-    private long statTime;
+    private int sampleRateInHz = 44100;
+    private double sampleRateInSeconds = 1.0 / (double)sampleRateInHz;
     private boolean active;
+    private double currentTimeIndex;
     private byte [] audioInputData;
     private TargetDataLine line;
     private Sample sample;
@@ -41,15 +43,13 @@ public class LineInput implements SampleStreamProvider {
     public LineInput() throws DataSourceNotAvailableException {
         consumers = new LinkedList<>();
         sample = new Sample();
-        lineInputFormat = new AudioFormat(44100, 8, 1, false, false);
+        lineInputFormat = new AudioFormat(sampleRateInHz, 8, 1, false, false);
         getTargetDataLine();
-        statTime = System.currentTimeMillis();
+        currentTimeIndex = 0.0;
     }
 
-    private double getCurrentTimeIndex() {
-        long millisecondsElapsed = System.currentTimeMillis() - statTime;
-        double timeElapsedInSeconds = (double)millisecondsElapsed / 1000.0;
-        return timeElapsedInSeconds;
+    private void increaseCurrentTimeIndexByOneSample() {
+        currentTimeIndex += sampleRateInSeconds;
     }
 
     private void getTargetDataLine() throws DataSourceNotAvailableException {
@@ -57,6 +57,7 @@ public class LineInput implements SampleStreamProvider {
         if (!AudioSystem.isLineSupported(info))
             throw new DataSourceNotAvailableException("Audio input line is not supported");
 
+        logInputLines(info);
         try {
             line = (TargetDataLine) AudioSystem.getLine(info);
             line.open(lineInputFormat);
@@ -65,9 +66,24 @@ public class LineInput implements SampleStreamProvider {
         }
     }
 
+    private void logInputLines(DataLine.Info info) {
+        logging.writeFileParsingInformation("Audio input lines: " + info);
+        Line.Info [] inputLines = AudioSystem.getSourceLineInfo(info);
+        for (Line.Info lineInfo : inputLines) {
+            logging.writeFileParsingInformation("Available audio input line: " + lineInfo);
+        }
+    }
+
     private void pushSample(Sample sample) {
+     //   if (!consumers.isEmpty())
+      //      logging.writeFileParsingInformation("Pushing " + sample.normalizedValue + ": " + currentTimeIndex);
+
         for (SampleStreamConsumer consumer : consumers)
-            consumer.push(sample, getCurrentTimeIndex());
+            consumer.push(sample, currentTimeIndex);
+    }
+
+    public Sample getLastSample() {
+        return sample;
     }
 
     public void startAudioCapture() {
@@ -96,6 +112,7 @@ public class LineInput implements SampleStreamProvider {
     private void processReceivedData(int bytesInBuffer) {
         for (byte value : audioInputData) {
             processAudioByte(value);
+            increaseCurrentTimeIndexByOneSample();
         }
     }
 
@@ -105,9 +122,9 @@ public class LineInput implements SampleStreamProvider {
     }
 
     private double normalizedValueFromByte(byte value) {
-        double normalizedValue = (double)value;
-        value /= 128.0;
-        return value;
+        double normalizedValue = (double)(Byte.toUnsignedInt(value)) - 128.0;
+        normalizedValue /= 128.0;
+        return normalizedValue;
     }
 
     @Override

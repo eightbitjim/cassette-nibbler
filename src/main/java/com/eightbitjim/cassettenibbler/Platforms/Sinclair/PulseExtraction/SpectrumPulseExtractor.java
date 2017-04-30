@@ -93,14 +93,12 @@ public class SpectrumPulseExtractor implements IntervalStreamConsumer, PulseStre
 
     private void checkForPilotTone() {
         if (pilotToneDetection.pilotToneIsValid()) {
-            logging.writeFileParsingInformation("PILOT TONE DETECTED");
             state = State.RECEIVING_PILOT_TONE;
         }
     }
 
     private void checkForEndOfPilotTone() {
         if (countsAsSyncPulses(lastInterval, currentTransitionLengthInTstates)) {
-            logging.writeFileParsingInformation("SYNC PULSES DETECTED");
             generatePulse(PulseStreamConsumer.SHORT_PULSE);
             state = State.RECEIVING_DATA;
             secondTStateInWave = true;
@@ -109,7 +107,6 @@ public class SpectrumPulseExtractor implements IntervalStreamConsumer, PulseStre
 
 
         if (!pilotToneDetection.pilotToneIsValid()) {
-                logging.writeFileParsingInformation("LOST PILOT TONE");
                 state = State.WAITING_FOR_PILOT_TONE;
                 generatePulse(PulseStreamConsumer.SILENCE);
                 return;
@@ -121,7 +118,6 @@ public class SpectrumPulseExtractor implements IntervalStreamConsumer, PulseStre
 
     private void processDataPulse() {
         if (pilotToneDetection.pilotToneIsValid()) {
-            logging.writeFileParsingInformation("PILOT TONE DETECTED");
             state = State.RECEIVING_PILOT_TONE;
             return;
         }
