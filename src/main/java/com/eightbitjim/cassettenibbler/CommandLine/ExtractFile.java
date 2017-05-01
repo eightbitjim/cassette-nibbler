@@ -19,9 +19,10 @@
 package com.eightbitjim.cassettenibbler.CommandLine;
 
 import com.eightbitjim.cassettenibbler.*;
-import com.eightbitjim.cassettenibbler.DataSink.AudioFileOutput;
-import com.eightbitjim.cassettenibbler.DataSink.Directory;
+import com.eightbitjim.cassettenibbler.DataSink.*;
 import com.eightbitjim.cassettenibbler.DataSource.AudioInputLibrary.AudioInput;
+import com.eightbitjim.cassettenibbler.DataSource.DataSourceNotAvailableException;
+import com.eightbitjim.cassettenibbler.DataSource.Live.LineInput;
 import com.eightbitjim.cassettenibbler.Platforms.Amstrad.AmstradPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Apple.ApplePlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.CommodorePlatformProvider;
@@ -34,7 +35,6 @@ import com.eightbitjim.cassettenibbler.Platforms.Oric.OricPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Sinclair.SinclairPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Automatic.AutomaticPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.TRS80.TRS80PlatformProvider;
-import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
@@ -44,16 +44,19 @@ import java.util.List;
 
 public class ExtractFile {
 
-    enum InputType { WAV, PULSES }
-    enum OutputDestination { DIRECTORY_LISTING, DIRECTORY, TAR, STANDARD_OUT }
+    enum InputType { WAV, PULSES, SAMPLES }
+    enum InputSource { STREAM, LINE }
 
-    private OutputDestination outputDestination = OutputDestination.DIRECTORY;
+    enum OutputDestination { DIRECTORY_LISTING, FILES, STANDARD_OUT }
+
+    private OutputDestination outputDestination = OutputDestination.FILES;
     private TapeFile.FormatType outputFileType = null;
 
     private Collection<Platform> availablePlatforms = new LinkedList<>();
     private String outputDirectory = ".";
 
     private InputType inputType;
+    private InputSource inputSource;
 
     private boolean error = false;
     private boolean invertWaveform = false;
@@ -61,7 +64,6 @@ public class ExtractFile {
     private boolean differentiateSignal = false;
     private boolean lowPassFilter = false;
     private double lowPassFilterCutoff = 4800.0;
-
     private boolean highPassFilter = false;
     private double highPassFilterCutoff = 600.0;
     private boolean disableDefaultFilters = false;
@@ -72,14 +74,13 @@ public class ExtractFile {
     private List<String> inputFilenames;
     private InputStream inputStream;
     private String soundOutput;
-
     private Collection<Platform> chosenPlatforms;
 
-    private Directory directory;
     private TimeCounter counter;
-    private AudioInput wavSource;
+    private SampleStreamProvider sampleSource;
     private PulseSourceFromInputStream pulseSource;
     private SampleStreamProvider connector;
+    private Directory directory;
     private transient TapeExtractionOptions options;
 
     public static final void main(String args[]) {
@@ -94,8 +95,8 @@ public class ExtractFile {
 
     public ExtractFile() {
         inputFilenames = new LinkedList<>();
-        directory = new Directory();
         inputType = InputType.WAV;
+        inputSource = InputSource.STREAM;
         setUpOptions();
         preparePlatforms();
         chosenPlatforms = new LinkedList<>();
@@ -117,11 +118,6 @@ public class ExtractFile {
             return;
         }
 
-        int fileCount = 0;
-        int numberOfFiles = inputFilenames.size();
-        if (numberOfFiles == 0)
-            numberOfFiles = 1;
-
         preparePlatformList();
         printIntroductionText();
         configurePlatforms();
@@ -129,6 +125,33 @@ public class ExtractFile {
 
         counter = new TimeCounter();
         configureProgessIndicator();
+
+        switch (inputSource) {
+            case LINE:
+                processLineInput();
+                break;
+
+            default:
+            case STREAM:
+                processStreamInput();
+                break;
+        }
+
+        printFinalOutput();
+    }
+
+    private void printFinalOutput() {
+        if (directory != null)
+            System.err.println(directory);
+
+        printTimeCounter();
+    }
+
+    private void processStreamInput() throws UnsupportedAudioFileException, PlatformAccessError, IOException {
+        int fileCount = 0;
+        int numberOfFiles = inputFilenames.size();
+        if (numberOfFiles == 0)
+            numberOfFiles = 1;
 
         List <InputStreamSource> streamList = getDataStreamList();
         for (InputStreamSource source : streamList) {
@@ -138,9 +161,18 @@ public class ExtractFile {
             extractFromInputStream();
             inputStream.close();
         }
+    }
 
-        printTimeCounter();
-        printOrGetFilesFromDirecotry();
+    private void processLineInput() throws PlatformAccessError {
+        if (progressIndicator != null) {
+            progressIndicator.setMessage("Reading from audio input.");
+            progressIndicator.setProgressPercent(0, "Press use CTRL+C to stop");
+        }
+
+        runThroughSamples();
+
+        if (progressIndicator != null)
+            progressIndicator.setMessage("Stopped.");
     }
 
     private void updateProgressPercent(int percent, String progressMessage) {
@@ -157,38 +189,8 @@ public class ExtractFile {
     private void extractFromInputStream() throws IOException, PlatformAccessError, UnsupportedAudioFileException {
         if (inputType == InputType.WAV) {
             AudioInput wavFile = new AudioInput(inputStream);
-            Amplify amplifier = new Amplify(volumeMultiplier * (invertWaveform ? -1.0 : 1.0));
-            wavFile.registerSampleStreamConsumer(amplifier);
-
-            connector = amplifier;
-
-            if (differentiateSignal) {
-                Differentiate differentiate = new Differentiate();
-                connector.registerSampleStreamConsumer(differentiate);
-                connector = differentiate;
-            }
-
-            if (lowPassFilter) {
-                LowPass lowPassFilter = new LowPass(lowPassFilterCutoff);
-                connector.registerSampleStreamConsumer(lowPassFilter);
-                connector = lowPassFilter;
-            }
-
-            if (highPassFilter) {
-                HighPass highPassFilter = new HighPass(highPassFilterCutoff);
-                connector.registerSampleStreamConsumer(highPassFilter);
-                connector = highPassFilter;
-            }
-
-            wavSource = wavFile;
-            wavSource.registerSampleStreamConsumer(counter);
-            pulseSource = new PulseSourceFromInputStream(inputStream);
-
-            if (soundOutput != null) {
-                AudioFileOutput audioFileOutput = new AudioFileOutput(soundOutput);
-                connector.registerSampleStreamConsumer(audioFileOutput);
-            }
-
+            sampleSource = wavFile;
+            configureSampleStreamInput();
         } else if (inputType == InputType.PULSES) {
             pulseSource = new PulseSourceFromInputStream(inputStream);
             connector = new DummySampleSource();
@@ -198,15 +200,51 @@ public class ExtractFile {
         runThroughSource();
     }
 
+    private void configureSampleStreamInput() {
+        Amplify amplifier = new Amplify(volumeMultiplier * (invertWaveform ? -1.0 : 1.0));
+        connector = amplifier;
+        sampleSource.registerSampleStreamConsumer(amplifier);
+
+        if (differentiateSignal) {
+            Differentiate differentiate = new Differentiate();
+            connector.registerSampleStreamConsumer(differentiate);
+            connector = differentiate;
+        }
+
+        if (lowPassFilter) {
+            LowPass lowPassFilter = new LowPass(lowPassFilterCutoff);
+            connector.registerSampleStreamConsumer(lowPassFilter);
+            connector = lowPassFilter;
+        }
+
+        if (highPassFilter) {
+            HighPass highPassFilter = new HighPass(highPassFilterCutoff);
+            connector.registerSampleStreamConsumer(highPassFilter);
+            connector = highPassFilter;
+        }
+
+        sampleSource.registerSampleStreamConsumer(counter);
+        pulseSource = new PulseSourceFromInputStream(inputStream);
+
+        if (soundOutput != null) {
+            AudioFileOutput audioFileOutput = new AudioFileOutput(soundOutput);
+            connector.registerSampleStreamConsumer(audioFileOutput);
+        }
+    }
+
     private void configureProgessIndicator() {
         if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS) {
             progressIndicator = new CommandLineProgressIndicator("Progress");
-            for (Platform platform : chosenPlatforms) {
-                try {
-                    platform.getFileOutputPoint().registerFileStreamConsumer(progressIndicator);
-                } catch (PlatformAccessError platformAccessError) {
+            addFileStreamConsomerToPlatforms(progressIndicator);
+        }
+    }
 
-                }
+    private void addFileStreamConsomerToPlatforms(FileStreamConsumer consumer) {
+        for (Platform platform : chosenPlatforms) {
+            try {
+                platform.getFileOutputPoint().registerFileStreamConsumer(consumer);
+            } catch (PlatformAccessError platformAccessError) {
+                System.err.println("Error adding consumer to platform: " + platformAccessError.toString());
             }
         }
     }
@@ -270,6 +308,7 @@ public class ExtractFile {
         for (Platform platform : chosenPlatforms) {
             switch (inputType) {
                 case WAV:
+                case SAMPLES:
                     linkSourceToCorrectInputPoint(platform);
                     break;
                 case PULSES:
@@ -287,9 +326,30 @@ public class ExtractFile {
     }
 
     private void linkDestinationToPlatforms() throws PlatformAccessError {
-        for (Platform platform : chosenPlatforms) {
-            platform.getFileOutputPoint().registerFileStreamConsumer(directory);
+        FileStreamConsumer fileStreamDataSink;
+        boolean allowFilesWithErrors = options.getAttemptToRecoverCorruptedFiles() ||
+                options.getAllowIncorrectFileChecksums() ||
+                options.getAllowIncorrectFrameChecksums();
+
+        switch (outputDestination) {
+            default:
+            case FILES:
+                fileStreamDataSink = new FileOutputFileWriter(outputDirectory, allowFilesWithErrors)
+                        .setOutputFileType(outputFileType);
+                break;
+
+            case STANDARD_OUT:
+                fileStreamDataSink = new StreamOutputFileWriter(System.out, allowFilesWithErrors)
+                        .setOutputFileType(outputFileType);
+                break;
+
+            case DIRECTORY_LISTING:
+                directory = new Directory();
+                fileStreamDataSink = directory;
+                break;
         }
+
+        addFileStreamConsomerToPlatforms(fileStreamDataSink);
     }
 
     private void parseArguments(String [] args) {
@@ -304,7 +364,7 @@ public class ExtractFile {
                         outputDestination = OutputDestination.DIRECTORY_LISTING;
                         break;
                     case "-destination=directory":
-                        outputDestination = OutputDestination.DIRECTORY;
+                        outputDestination = OutputDestination.FILES;
                         break;
                     case "-destination=stdout":
                         outputDestination = OutputDestination.STANDARD_OUT;
@@ -323,6 +383,11 @@ public class ExtractFile {
                         break;
                     case "-nofilters":
                         disableDefaultFilters = true;
+                        break;
+                    case "-linein":
+                        inputType = InputType.SAMPLES;
+                        inputSource = InputSource.LINE;
+                        inputSourceSpecified = true;
                         break;
                     case "-invert":
                         invertWaveform = true;
@@ -458,6 +523,7 @@ public class ExtractFile {
         System.err.println("-invert: invert the incoming waveform before processing");
         System.err.println("-differentiate: differentiate the input signal before processing");
         System.err.println("-nofilters: disable default high and low pass filters on all platforms");
+        System.err.println("-linein: audio from default line input device rather than audio files (experimental)");
         System.err.println("-lowpass=<freq>: pass signal through a low pass filter before processing, cutoff specified in hz");
         System.err.println("-highass=<freq>: pass signal through a high pass filter before processing, cutoff specified in hz");
         System.err.println("-volume=<1.0, etc>: amount to multiply incoming signal by");
@@ -493,109 +559,12 @@ public class ExtractFile {
         }
     }
 
-    private void printOrGetFilesFromDirecotry() throws IOException {
-        switch (outputDestination) {
-            case DIRECTORY:
-                outputFilesToDirectory();
-                break;
-            case DIRECTORY_LISTING:
-                displayDirectoryContents();
-                break;
-            case STANDARD_OUT:
-                outputFilesToStandardOut();
-                break;
-        }
-    }
-
-    private void outputFilesToStandardOut() {
-        for (TapeFile file : directory.getList()) {
-            outputSingleFileToStandardOut(file);
-        }
-    }
-
-    private void outputSingleFileToStandardOut(TapeFile file) {
-        if (outputFileType != null)
-            outputFileOfType(file, outputFileType);
-        else {
-            for (TapeFile.FormatType formatType : TapeFile.FormatType.values()) {
-                outputFileOfType(file, formatType);
-            }
-        }
-    }
-
-    private void outputFileOfType(TapeFile file, TapeFile.FormatType formatType) {
-        try {
-            byte [] data = file.getDataBytesOfType(formatType);
-            if (data != null)
-                System.out.write(data);
-
-        } catch (IOException e) {
-            System.err.println("Problem outputing data to standard out: " + e.toString());
-        }
-    }
-
-    private void outputFilesToDirectory() {
-        for (TapeFile file : directory.getList()) {
-            outputSingleFileOfType(file);
-        }
-    }
-
-    private void outputSingleFileOfType(TapeFile file) {
-        if (outputFileType != null)
-            outputSingleFileToDirectoryOfType(file, outputFileType);
-        else {
-            for (TapeFile.FormatType formatType : TapeFile.FormatType.values()) {
-                outputSingleFileToDirectoryOfType(file, formatType);
-            }
-        }
-    }
-
-    private void outputSingleFileToDirectoryOfType(TapeFile file, TapeFile.FormatType formatType) {
-        byte [] data = file.getDataBytesOfType(formatType);
-        if (data != null) {
-            try {
-                String filename = getFilenameFor(file, formatType);
-
-                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(getFilePath(outputDirectory, filename)));
-                outputStream.write(data);
-                outputStream.close();
-            } catch (IOException e) {
-                System.err.println("Error writing file " + file.getFilename() + ":" + e.toString());
-            }
-        }
-    }
-
-    private String getFilenameFor(TapeFile file, TapeFile.FormatType formatType) {
-        StringBuilder filename = new StringBuilder();
-        filename.append(file.getFilename());
-        filename.append(".").append(Integer.toHexString(file.hashCode()));
-        if (file.containsErrors())
-            filename.append(".ERR");
-
-        filename.append(".").append(file.getFileExtensionForType(formatType));
-
-        String completedFilename = filename.toString();
-        return PrintableString.convertToSuitableFilename(completedFilename);
-    }
-
-    private void displayDirectoryContents() {
-        List <TapeFile> files = directory.getList();
-        int count = 0;
-        for (TapeFile file : files) {
-            System.err.print("" + count + " " + getFilenameFor(file, TapeFile.FormatType.BINARY)+ ": " + file.length() + " bytes ");
-            System.err.println();
-            count++;
-        }
-    }
-
     private List <InputStreamSource> getDataStreamList() throws FileNotFoundException {
         List <InputStreamSource> streamList = new LinkedList<>();
         if (inputFilenames.isEmpty()) {
             streamList.add(new InputStreamSource(System.in, "standard input"));
         } else {
-            int count = 1;
             for (String filename : inputFilenames) {
-                count++;
                 InputStreamSource source = new InputStreamSource(new BufferedInputStream(new FileInputStream(filename)), filename);
                 streamList.add(source);
             }
@@ -624,73 +593,45 @@ public class ExtractFile {
     }
 
     private void runThroughWavFile() {
-        wavSource.processFile();
+        ((AudioInput)sampleSource).processFile();
+    }
+
+    private void runThroughSamples() throws PlatformAccessError {
+        try {
+            LineInput lineInput = new LineInput();
+            sampleSource = lineInput;
+            configureSampleStreamInput();
+            linkSourceToPlatforms();
+
+            if (progressIndicator != null)
+                connector.registerSampleStreamConsumer(progressIndicator);
+
+            lineInput.startAudioCapture();
+
+            while (System.in.available() == 0) {
+                lineInput.processReceivedSamples();
+                Thread.sleep(10);
+            }
+
+            lineInput.stopAudioCapture();
+        } catch (DataSourceNotAvailableException e) {
+            System.err.println(e.toString());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void preparePlatforms() {
-        addCommodorePlatforms();
-        addAcornPlatforms();
-        addSinclairPlatforms();
-        addOricPlatforms();
-        addMSXPlatforms();
-        addTRS80Platforms();
-        addApplePlatforms();
-        addAmstradPlatforms();
-        addAnalysisPlatforms();
-    }
-
-    private void addCommodorePlatforms() {
-        Collection<Platform> commodorePlatforms = new CommodorePlatformProvider().getPlatforms();
-        availablePlatforms.addAll(commodorePlatforms);
-    }
-
-    private void addAcornPlatforms() {
-        Collection<Platform> acornPlatforms = new AcornPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(acornPlatforms);
-    }
-
-    private void addSinclairPlatforms() {
-        Collection<Platform> sinclairPlatforms = new SinclairPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(sinclairPlatforms);
-    }
-
-    private void addOricPlatforms() {
-        Collection<Platform> oricPlatforms = new OricPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(oricPlatforms);
-    }
-
-    private void addMSXPlatforms() {
-        Collection<Platform> msxPlatforms = new MSXPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(msxPlatforms);
-    }
-
-    private void addAmstradPlatforms() {
-        Collection<Platform> amstradPlatforms = new AmstradPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(amstradPlatforms);
-    }
-
-    private void addTRS80Platforms() {
-        Collection<Platform> trs80Platforms = new TRS80PlatformProvider().getPlatforms();
-        availablePlatforms.addAll(trs80Platforms);
-    }
-
-    private void addApplePlatforms() {
-        Collection<Platform> applePlatforms = new ApplePlatformProvider().getPlatforms();
-        availablePlatforms.addAll(applePlatforms);
-    }
-
-    private void addAnalysisPlatforms() {
-        Collection<Platform> analysisPlatforms = new AutomaticPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(analysisPlatforms);
-    }
-
-    private String getFilePath(String directory, String filename) {
-        StringBuilder pathToReturn = new StringBuilder();
-        pathToReturn.append(directory);
-        if (!directory.endsWith("/") && !directory.endsWith("\\"))
-            pathToReturn.append("/");
-
-        pathToReturn.append(filename);
-        return pathToReturn.toString();
+        availablePlatforms.addAll(new CommodorePlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AcornPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new SinclairPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new OricPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new MSXPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new TRS80PlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new ApplePlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AmstradPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AutomaticPlatformProvider().getPlatforms());
     }
 }

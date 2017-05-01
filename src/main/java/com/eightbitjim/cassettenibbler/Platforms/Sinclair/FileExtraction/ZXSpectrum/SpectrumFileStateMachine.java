@@ -297,6 +297,7 @@ public class SpectrumFileStateMachine implements PulseStreamConsumer, FileStream
 
             receivedByteSinceLeader = true;
             constructingByte = 0;
+            currentByteContainedErrors = false;
         }
     }
 
@@ -381,6 +382,9 @@ public class SpectrumFileStateMachine implements PulseStreamConsumer, FileStream
                 return;
         }
 
+        if (!isHeaderChecksumValid())
+            currentFile.isInError();
+
         logging.writeFileParsingInformation("FILE TYPE: " + currentFile.type.toUpperCase());
         String filename = "";
         for (int i = 0; i < 10; i++)
@@ -449,6 +453,7 @@ public class SpectrumFileStateMachine implements PulseStreamConsumer, FileStream
                 return;
             } else {
                 logging.writeDataError(currentTimeIndex, "Options specify to ignore bad checksums, so continuing.");
+                currentFile.isInError();
             }
         }
 

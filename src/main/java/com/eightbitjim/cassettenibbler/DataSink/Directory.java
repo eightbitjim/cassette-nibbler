@@ -48,18 +48,16 @@ public class Directory implements FileStreamConsumer, FileStreamProvider {
 
     @Override
     public String toString() {
-        int count = 0;
         StringBuffer directoryString = new StringBuffer();
         if (files.size() == 0) {
             directoryString.append("No files found");
-        } else {
-        //    directoryString.append("" + files.size() + " file" + (files.size() == 1 ? "" : "s") + ":\n\n");
         }
 
+        int count = 0;
         for (TapeFile file : files) {
             directoryString.append(count++);
             directoryString.append(" ");
-            directoryString.append(file.toString());
+            directoryString.append(file.getFilenameFor(TapeFile.FormatType.BINARY)+ ": " + file.length() + " bytes ");
             directoryString.append("\n");
         }
 
