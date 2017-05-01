@@ -21,6 +21,8 @@ package com.eightbitjim.cassettenibbler.CommandLine;
 import com.eightbitjim.cassettenibbler.*;
 import com.eightbitjim.cassettenibbler.DataSink.AudioFileOutput;
 import com.eightbitjim.cassettenibbler.DataSink.Directory;
+import com.eightbitjim.cassettenibbler.DataSink.FileOutputFileWriter;
+import com.eightbitjim.cassettenibbler.DataSink.StreamOutputFileWriter;
 import com.eightbitjim.cassettenibbler.DataSource.AudioInputLibrary.AudioInput;
 import com.eightbitjim.cassettenibbler.DataSource.DataSourceNotAvailableException;
 import com.eightbitjim.cassettenibbler.DataSource.Live.LineInput;
@@ -36,7 +38,6 @@ import com.eightbitjim.cassettenibbler.Platforms.Oric.OricPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Sinclair.SinclairPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Automatic.AutomaticPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.TRS80.TRS80PlatformProvider;
-import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
@@ -49,9 +50,9 @@ public class ExtractFile {
     enum InputType { WAV, PULSES, SAMPLES }
     enum InputSource { STREAM, LINE }
 
-    enum OutputDestination { DIRECTORY_LISTING, DIRECTORY, TAR, STANDARD_OUT }
+    enum OutputDestination { DIRECTORY_LISTING, FILES, STANDARD_OUT }
 
-    private OutputDestination outputDestination = OutputDestination.DIRECTORY;
+    private OutputDestination outputDestination = OutputDestination.FILES;
     private TapeFile.FormatType outputFileType = null;
 
     private Collection<Platform> availablePlatforms = new LinkedList<>();
@@ -76,14 +77,13 @@ public class ExtractFile {
     private List<String> inputFilenames;
     private InputStream inputStream;
     private String soundOutput;
-
     private Collection<Platform> chosenPlatforms;
 
-    private Directory directory;
     private TimeCounter counter;
     private SampleStreamProvider sampleSource;
     private PulseSourceFromInputStream pulseSource;
     private SampleStreamProvider connector;
+    private Directory directory;
     private transient TapeExtractionOptions options;
 
     public static final void main(String args[]) {
@@ -98,7 +98,6 @@ public class ExtractFile {
 
     public ExtractFile() {
         inputFilenames = new LinkedList<>();
-        directory = new Directory();
         inputType = InputType.WAV;
         inputSource = InputSource.STREAM;
         setUpOptions();
@@ -141,8 +140,14 @@ public class ExtractFile {
                 break;
         }
 
+        printFinalOutput();
+    }
+
+    private void printFinalOutput() {
+        if (directory != null)
+            System.err.println(directory);
+
         printTimeCounter();
-        printOrGetFilesFromDirecotry();
     }
 
     private void processStreamInput() throws UnsupportedAudioFileException, PlatformAccessError, IOException {
@@ -164,7 +169,7 @@ public class ExtractFile {
     private void processLineInput() throws PlatformAccessError {
         if (progressIndicator != null) {
             progressIndicator.setMessage("Reading from audio input.");
-            progressIndicator.setProgressPercent(0, "Press a key to stop");
+            progressIndicator.setProgressPercent(0, "Press use CTRL+C to stop");
         }
 
         runThroughSamples();
@@ -234,12 +239,16 @@ public class ExtractFile {
     private void configureProgessIndicator() {
         if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS) {
             progressIndicator = new CommandLineProgressIndicator("Progress");
-            for (Platform platform : chosenPlatforms) {
-                try {
-                    platform.getFileOutputPoint().registerFileStreamConsumer(progressIndicator);
-                } catch (PlatformAccessError platformAccessError) {
+            addFileStreamConsomerToPlatforms(progressIndicator);
+        }
+    }
 
-                }
+    private void addFileStreamConsomerToPlatforms(FileStreamConsumer consumer) {
+        for (Platform platform : chosenPlatforms) {
+            try {
+                platform.getFileOutputPoint().registerFileStreamConsumer(consumer);
+            } catch (PlatformAccessError platformAccessError) {
+                System.err.println("Error adding consumer to platform: " + platformAccessError.toString());
             }
         }
     }
@@ -322,9 +331,30 @@ public class ExtractFile {
     }
 
     private void linkDestinationToPlatforms() throws PlatformAccessError {
-        for (Platform platform : chosenPlatforms) {
-            platform.getFileOutputPoint().registerFileStreamConsumer(directory);
+        FileStreamConsumer fileStreamDataSink;
+        boolean allowFilesWithErrors = options.getAttemptToRecoverCorruptedFiles() ||
+                options.getAllowIncorrectFileChecksums() ||
+                options.getAllowIncorrectFrameChecksums();
+
+        switch (outputDestination) {
+            default:
+            case FILES:
+                fileStreamDataSink = new FileOutputFileWriter(outputDirectory, allowFilesWithErrors)
+                        .setOutputFileType(outputFileType);
+                break;
+
+            case STANDARD_OUT:
+                fileStreamDataSink = new StreamOutputFileWriter(System.out, allowFilesWithErrors)
+                        .setOutputFileType(outputFileType);
+                break;
+
+            case DIRECTORY_LISTING:
+                directory = new Directory();
+                fileStreamDataSink = directory;
+                break;
         }
+
+        addFileStreamConsomerToPlatforms(fileStreamDataSink);
     }
 
     private void parseArguments(String [] args) {
@@ -339,7 +369,7 @@ public class ExtractFile {
                         outputDestination = OutputDestination.DIRECTORY_LISTING;
                         break;
                     case "-destination=directory":
-                        outputDestination = OutputDestination.DIRECTORY;
+                        outputDestination = OutputDestination.FILES;
                         break;
                     case "-destination=stdout":
                         outputDestination = OutputDestination.STANDARD_OUT;
@@ -534,101 +564,6 @@ public class ExtractFile {
         }
     }
 
-    private void printOrGetFilesFromDirecotry() throws IOException {
-        switch (outputDestination) {
-            case DIRECTORY:
-                outputFilesToDirectory();
-                break;
-            case DIRECTORY_LISTING:
-                displayDirectoryContents();
-                break;
-            case STANDARD_OUT:
-                outputFilesToStandardOut();
-                break;
-        }
-    }
-
-    private void outputFilesToStandardOut() {
-        for (TapeFile file : directory.getList()) {
-            outputSingleFileToStandardOut(file);
-        }
-    }
-
-    private void outputSingleFileToStandardOut(TapeFile file) {
-        if (outputFileType != null)
-            outputFileOfType(file, outputFileType);
-        else {
-            for (TapeFile.FormatType formatType : TapeFile.FormatType.values()) {
-                outputFileOfType(file, formatType);
-            }
-        }
-    }
-
-    private void outputFileOfType(TapeFile file, TapeFile.FormatType formatType) {
-        try {
-            byte [] data = file.getDataBytesOfType(formatType);
-            if (data != null)
-                System.out.write(data);
-
-        } catch (IOException e) {
-            System.err.println("Problem outputing data to standard out: " + e.toString());
-        }
-    }
-
-    private void outputFilesToDirectory() {
-        for (TapeFile file : directory.getList()) {
-            outputSingleFileOfType(file);
-        }
-    }
-
-    private void outputSingleFileOfType(TapeFile file) {
-        if (outputFileType != null)
-            outputSingleFileToDirectoryOfType(file, outputFileType);
-        else {
-            for (TapeFile.FormatType formatType : TapeFile.FormatType.values()) {
-                outputSingleFileToDirectoryOfType(file, formatType);
-            }
-        }
-    }
-
-    private void outputSingleFileToDirectoryOfType(TapeFile file, TapeFile.FormatType formatType) {
-        byte [] data = file.getDataBytesOfType(formatType);
-        if (data != null) {
-            try {
-                String filename = getFilenameFor(file, formatType);
-
-                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(getFilePath(outputDirectory, filename)));
-                outputStream.write(data);
-                outputStream.close();
-            } catch (IOException e) {
-                System.err.println("Error writing file " + file.getFilename() + ":" + e.toString());
-            }
-        }
-    }
-
-    private String getFilenameFor(TapeFile file, TapeFile.FormatType formatType) {
-        StringBuilder filename = new StringBuilder();
-        filename.append(file.getFilename());
-        filename.append(".").append(Integer.toHexString(file.hashCode()));
-        if (file.containsErrors())
-            filename.append(".ERR");
-
-        filename.append(".").append(file.getFileExtensionForType(formatType));
-
-        String completedFilename = filename.toString();
-        return PrintableString.convertToSuitableFilename(completedFilename);
-    }
-
-    private void displayDirectoryContents() {
-        List <TapeFile> files = directory.getList();
-        int count = 0;
-        for (TapeFile file : files) {
-            System.err.print("" + count + " " + getFilenameFor(file, TapeFile.FormatType.BINARY)+ ": " + file.length() + " bytes ");
-            System.err.println();
-            count++;
-        }
-    }
-
     private List <InputStreamSource> getDataStreamList() throws FileNotFoundException {
         List <InputStreamSource> streamList = new LinkedList<>();
         if (inputFilenames.isEmpty()) {
@@ -689,69 +624,14 @@ public class ExtractFile {
     }
 
     private void preparePlatforms() {
-        addCommodorePlatforms();
-        addAcornPlatforms();
-        addSinclairPlatforms();
-        addOricPlatforms();
-        addMSXPlatforms();
-        addTRS80Platforms();
-        addApplePlatforms();
-        addAmstradPlatforms();
-        addAnalysisPlatforms();
-    }
-
-    private void addCommodorePlatforms() {
-        Collection<Platform> commodorePlatforms = new CommodorePlatformProvider().getPlatforms();
-        availablePlatforms.addAll(commodorePlatforms);
-    }
-
-    private void addAcornPlatforms() {
-        Collection<Platform> acornPlatforms = new AcornPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(acornPlatforms);
-    }
-
-    private void addSinclairPlatforms() {
-        Collection<Platform> sinclairPlatforms = new SinclairPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(sinclairPlatforms);
-    }
-
-    private void addOricPlatforms() {
-        Collection<Platform> oricPlatforms = new OricPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(oricPlatforms);
-    }
-
-    private void addMSXPlatforms() {
-        Collection<Platform> msxPlatforms = new MSXPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(msxPlatforms);
-    }
-
-    private void addAmstradPlatforms() {
-        Collection<Platform> amstradPlatforms = new AmstradPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(amstradPlatforms);
-    }
-
-    private void addTRS80Platforms() {
-        Collection<Platform> trs80Platforms = new TRS80PlatformProvider().getPlatforms();
-        availablePlatforms.addAll(trs80Platforms);
-    }
-
-    private void addApplePlatforms() {
-        Collection<Platform> applePlatforms = new ApplePlatformProvider().getPlatforms();
-        availablePlatforms.addAll(applePlatforms);
-    }
-
-    private void addAnalysisPlatforms() {
-        Collection<Platform> analysisPlatforms = new AutomaticPlatformProvider().getPlatforms();
-        availablePlatforms.addAll(analysisPlatforms);
-    }
-
-    private String getFilePath(String directory, String filename) {
-        StringBuilder pathToReturn = new StringBuilder();
-        pathToReturn.append(directory);
-        if (!directory.endsWith("/") && !directory.endsWith("\\"))
-            pathToReturn.append("/");
-
-        pathToReturn.append(filename);
-        return pathToReturn.toString();
+        availablePlatforms.addAll(new CommodorePlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AcornPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new SinclairPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new OricPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new MSXPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new TRS80PlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new ApplePlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AmstradPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AutomaticPlatformProvider().getPlatforms());
     }
 }

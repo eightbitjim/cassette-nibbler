@@ -18,6 +18,8 @@
 
 package com.eightbitjim.cassettenibbler;
 
+import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
+
 public abstract class TapeFile {
     public enum FormatType {
         BINARY,
@@ -57,5 +59,18 @@ public abstract class TapeFile {
             this.additionalInformation += ".";
 
         this.additionalInformation += information;
+    }
+
+    public String getFilenameFor(TapeFile.FormatType formatType) {
+        StringBuilder filename = new StringBuilder();
+        filename.append(getFilename());
+        filename.append(".").append(Integer.toHexString(hashCode()));
+        if (containsErrors())
+            filename.append(".ERR");
+
+        filename.append(".").append(getFileExtensionForType(formatType));
+
+        String completedFilename = filename.toString();
+        return PrintableString.convertToSuitableFilename(completedFilename);
     }
 }
