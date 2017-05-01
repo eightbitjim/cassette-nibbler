@@ -523,7 +523,7 @@ public class ExtractFile {
         System.err.println("-invert: invert the incoming waveform before processing");
         System.err.println("-differentiate: differentiate the input signal before processing");
         System.err.println("-nofilters: disable default high and low pass filters on all platforms");
-        System.err.println("-linein: audio from line input device rather than audio files");
+        System.err.println("-linein: audio from default line input device rather than audio files (experimental)");
         System.err.println("-lowpass=<freq>: pass signal through a low pass filter before processing, cutoff specified in hz");
         System.err.println("-highass=<freq>: pass signal through a high pass filter before processing, cutoff specified in hz");
         System.err.println("-volume=<1.0, etc>: amount to multiply incoming signal by");
@@ -603,7 +603,9 @@ public class ExtractFile {
             configureSampleStreamInput();
             linkSourceToPlatforms();
 
-            connector.registerSampleStreamConsumer(progressIndicator);
+            if (progressIndicator != null)
+                connector.registerSampleStreamConsumer(progressIndicator);
+
             lineInput.startAudioCapture();
 
             while (System.in.available() == 0) {
