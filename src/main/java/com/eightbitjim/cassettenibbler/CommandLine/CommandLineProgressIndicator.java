@@ -18,11 +18,14 @@
 
 package com.eightbitjim.cassettenibbler.CommandLine;
 
+import com.eightbitjim.cassettenibbler.DataSink.VolumeLevel;
 import com.eightbitjim.cassettenibbler.FileStreamConsumer;
+import com.eightbitjim.cassettenibbler.Sample;
+import com.eightbitjim.cassettenibbler.SampleStreamConsumer;
 import com.eightbitjim.cassettenibbler.TapeFile;
 import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
-public class CommandLineProgressIndicator implements FileStreamConsumer {
+public class CommandLineProgressIndicator implements FileStreamConsumer, SampleStreamConsumer {
     private int progressPercent;
     private String progressMessage;
     private String message;
@@ -32,6 +35,9 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     private static final int maxWidth = 79;
     private static final String ANSI_CSI_UP_LINE = "\u001b[A";
     private static final String ANSI_CSI_ERASE_LINE = "\u001b[2K";
+    private VolumeLevel volumeLevel;
+    private double lastVolumeLevelUpdateTimeInSeconds;
+    private static final double volumeUpdateIntervalInSeconds = 0.2;
 
     public CommandLineProgressIndicator(String title) {
         progressPercent = 0;
@@ -40,6 +46,8 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
         filesExtracted = 0;
         indicatorAlreadyDisplayed = false;
         canMoveCursorUp = !isWindows();
+        volumeLevel = new VolumeLevel();
+        lastVolumeLevelUpdateTimeInSeconds = 0;
         printTitle();
     }
 
@@ -58,6 +66,11 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     public void setProgressPercent(int percent, String progressMessage) {
         progressPercent = percent;
         this.progressMessage = progressMessage;
+        updateDisplay();
+    }
+
+    public void setProgressPercent(int percent) {
+        progressPercent = percent;
         updateDisplay();
     }
 
@@ -147,5 +160,17 @@ public class CommandLineProgressIndicator implements FileStreamConsumer {
     public void pushFile(TapeFile file, long currentTimeIndex) {
         filesExtracted++;
         setMessage(file.getFilename() + " length " + file.length());
+    }
+
+    @Override
+    public void push(Sample sample, double currentTimeIndex) {
+        if (!canMoveCursorUp)
+            return;
+
+        volumeLevel.push(sample, currentTimeIndex);
+        if (currentTimeIndex > lastVolumeLevelUpdateTimeInSeconds + volumeUpdateIntervalInSeconds) {
+            lastVolumeLevelUpdateTimeInSeconds = currentTimeIndex;
+            setProgressPercent((int)(volumeLevel.getMaximumVolumeInWindow() * 100.0));
+        }
     }
 }

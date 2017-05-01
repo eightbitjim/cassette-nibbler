@@ -19,10 +19,7 @@
 package com.eightbitjim.cassettenibbler.CommandLine;
 
 import com.eightbitjim.cassettenibbler.*;
-import com.eightbitjim.cassettenibbler.DataSink.AudioFileOutput;
-import com.eightbitjim.cassettenibbler.DataSink.Directory;
-import com.eightbitjim.cassettenibbler.DataSink.FileOutputFileWriter;
-import com.eightbitjim.cassettenibbler.DataSink.StreamOutputFileWriter;
+import com.eightbitjim.cassettenibbler.DataSink.*;
 import com.eightbitjim.cassettenibbler.DataSource.AudioInputLibrary.AudioInput;
 import com.eightbitjim.cassettenibbler.DataSource.DataSourceNotAvailableException;
 import com.eightbitjim.cassettenibbler.DataSource.Live.LineInput;
@@ -173,6 +170,7 @@ public class ExtractFile {
         }
 
         runThroughSamples();
+
         if (progressIndicator != null)
             progressIndicator.setMessage("Stopped.");
     }
@@ -225,7 +223,6 @@ public class ExtractFile {
             connector = highPassFilter;
         }
 
-
         sampleSource.registerSampleStreamConsumer(counter);
         pulseSource = new PulseSourceFromInputStream(inputStream);
 
@@ -233,7 +230,6 @@ public class ExtractFile {
             AudioFileOutput audioFileOutput = new AudioFileOutput(soundOutput);
             connector.registerSampleStreamConsumer(audioFileOutput);
         }
-
     }
 
     private void configureProgessIndicator() {
@@ -318,7 +314,6 @@ public class ExtractFile {
                 case PULSES:
                     pulseSource.registerPulseStreamConsumer(platform.getPulseInputPoint());
                     break;
-
             }
         }
     }
@@ -607,7 +602,10 @@ public class ExtractFile {
             sampleSource = lineInput;
             configureSampleStreamInput();
             linkSourceToPlatforms();
+
+            connector.registerSampleStreamConsumer(progressIndicator);
             lineInput.startAudioCapture();
+
             while (System.in.available() == 0) {
                 lineInput.processReceivedSamples();
                 Thread.sleep(10);
