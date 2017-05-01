@@ -75,9 +75,6 @@ public class LineInput implements SampleStreamProvider {
     }
 
     private void pushSample(Sample sample) {
-     //   if (!consumers.isEmpty())
-      //      logging.writeFileParsingInformation("Pushing " + sample.normalizedValue + ": " + currentTimeIndex);
-
         for (SampleStreamConsumer consumer : consumers)
             consumer.push(sample, currentTimeIndex);
     }
