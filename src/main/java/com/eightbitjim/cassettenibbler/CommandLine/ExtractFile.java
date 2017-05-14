@@ -25,6 +25,7 @@ import com.eightbitjim.cassettenibbler.DataSource.DataSourceNotAvailableExceptio
 import com.eightbitjim.cassettenibbler.DataSource.Live.LineInput;
 import com.eightbitjim.cassettenibbler.Platforms.Amstrad.AmstradPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Apple.ApplePlatformProvider;
+import com.eightbitjim.cassettenibbler.Platforms.Atari.AtariPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.CommodorePlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.*;
 import com.eightbitjim.cassettenibbler.DataSource.DummySampleSource;
@@ -632,6 +633,7 @@ public class ExtractFile {
         availablePlatforms.addAll(new TRS80PlatformProvider().getPlatforms());
         availablePlatforms.addAll(new ApplePlatformProvider().getPlatforms());
         availablePlatforms.addAll(new AmstradPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new AtariPlatformProvider().getPlatforms());
         availablePlatforms.addAll(new AutomaticPlatformProvider().getPlatforms());
     }
 }
