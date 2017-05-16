@@ -20,6 +20,10 @@ package com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats;
 
 class BBCBasicKeywords {
     private static final int firstKeywordTokenValue = 0x7f;
+    private static final int EXTENDED_TOKEN_1 = 0xc6;
+    private static final int EXTENDED_TOKEN_2 = 0xc7;
+    private static final int EXTENDED_TOKEN_3 = 0xc8;
+
     private static final String [] keyword = {
             "OTHERWISE",
             "AND", "DIV", "EOR", "MOD", "OR", "ERROR", "LINE", "OFF",
@@ -48,11 +52,60 @@ class BBCBasicKeywords {
             "RETURN", "RUN", "STOP", "COLOUR", "TRACE", "UNTIL", "WIDTH", "OSCLI"
     };
 
-    public String getKeywordForToken(int token) {
+    private static final String [] extendedTokens1 = {
+            "SUM", "BEAT"
+    };
+
+    private static final String [] extendedTokens2 = {
+            "EXTENDED TOKENS NOT YET IMPLEMENTED"
+    };
+
+    private static final String [] extendedTokens3 = {
+            "EXTENDED TOKENS NOT YET IMPLEMENTED"
+    };
+
+    public static String getKeywordForToken(int token) {
         token -= firstKeywordTokenValue;
         if (token < 0 || token >= keyword.length)
             return "INVALID_KEYWORD_TOKEN";
         else
             return keyword[token];
+    }
+
+    public static String getKayboardForExtendedToken(int firstByte, int secondByte) {
+        switch (firstByte) {
+            case EXTENDED_TOKEN_1:
+                return decodeExtendedToken1(secondByte);
+            case EXTENDED_TOKEN_2:
+                return decodeExtendedToken2(secondByte);
+            case EXTENDED_TOKEN_3:
+                return decodeExtendedToken3(secondByte);
+            default:
+                return "INVALID_EXTENDED_TOKEN";
+        }
+    }
+
+    public static String decodeExtendedToken1(int token) {
+        token -= 0x8e;
+        if (token < 0 || token >= extendedTokens1.length)
+            return "INVALID_EXTENDED_TOKEN";
+        else
+            return extendedTokens1[token];
+    }
+
+    public static String decodeExtendedToken2(int token) {
+        token -= 0x8e;
+        if (token < 0 || token >= extendedTokens2.length)
+            return "INVALID_EXTENDED_TOKEN";
+        else
+            return extendedTokens1[token];
+    }
+
+    public static String decodeExtendedToken3(int token) {
+        token -= 0x8e;
+        if (token < 0 || token >= extendedTokens3.length)
+            return "INVALID_EXTENDED_TOKEN";
+        else
+            return extendedTokens1[token];
     }
 }

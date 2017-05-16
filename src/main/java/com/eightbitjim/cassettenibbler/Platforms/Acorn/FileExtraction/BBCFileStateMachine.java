@@ -24,7 +24,7 @@ import com.eightbitjim.cassettenibbler.TapeExtractionLogging;
 import com.eightbitjim.cassettenibbler.TapeExtractionOptions;
 
 public class BBCFileStateMachine {
-    private static final int MINIMUM_LEADER_LENGTH = 32;
+    private static int MINIMUM_LEADER_LENGTH = 32;
     enum State {
         WAITING_FOR_HEADER_LEADER,
         WAITING_FOR_END_OF_HEADER_LEADER,
@@ -56,6 +56,9 @@ public class BBCFileStateMachine {
 	    currentFileIsReadyToReturn = false;
         acornByte = new AcornByte(is1200BaudNot300 ? AcornByte.Baud.BAUD_1200 : AcornByte.Baud.BAUD_300);
         fileBuilder = new FileBuilder();
+        if (!is1200BaudNot300)
+            MINIMUM_LEADER_LENGTH *= 4;
+
         reset();
     }
 
