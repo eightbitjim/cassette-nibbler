@@ -18,10 +18,7 @@
 
 package com.eightbitjim.cassettenibbler.Platforms.Acorn.PulseExtraction;
 
-import com.eightbitjim.cassettenibbler.IntervalStreamConsumer;
-import com.eightbitjim.cassettenibbler.PulseStreamProvider;
-import com.eightbitjim.cassettenibbler.Transition;
-import com.eightbitjim.cassettenibbler.PulseStreamConsumer;
+import com.eightbitjim.cassettenibbler.*;
 
 import java.util.LinkedList;
 import java.util.List;
