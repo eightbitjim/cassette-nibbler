@@ -79,6 +79,9 @@ public class BBCBasicProgram {
             int currentByte;
             do {
                 currentByte = getNextByte();
+                if (currentByte == '\"')
+                    inQuote = !inQuote;
+
                 if (currentByte != START_OF_LINE)
                     line.append(getBasicStringFor(currentByte));
             } while (currentByte != START_OF_LINE);
@@ -106,7 +109,7 @@ public class BBCBasicProgram {
     }
 
     private String getBasicStringFor(int value) throws IOException {
-        if (value >= 0x7f)
+        if (value >= 0x7f && !inQuote)
             return getStringForToken(value);
         else
             return Character.toString((char) value);

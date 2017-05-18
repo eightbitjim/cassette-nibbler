@@ -34,7 +34,7 @@ public class BinaryToASCII {
     }
 
     public static char getPrintableCharacterForBinaryCharacterCode(byte code) {
-        char convertedValue = (char)code;
+        char convertedValue = (char)(Byte.toUnsignedInt(code));
         if (Character.isLetterOrDigit(convertedValue))
             return convertedValue;
 

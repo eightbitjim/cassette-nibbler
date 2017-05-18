@@ -47,6 +47,11 @@ public class FileBuilder {
         previousBlockNumber = -1;
     }
 
+    public void currentFileHasAnError() {
+        if (currentFile != null)
+            currentFile.isInError();
+    }
+
     private void log(String message) {
         logging.writeFileParsingInformation(message);
     }

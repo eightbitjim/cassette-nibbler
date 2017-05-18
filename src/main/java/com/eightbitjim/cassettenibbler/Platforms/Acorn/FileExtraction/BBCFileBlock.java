@@ -54,6 +54,18 @@ public class BBCFileBlock {
     }
 
     @Override
+    public int hashCode() {
+        int hash = 0;
+        if (headerBuffer != null)
+            hash ^= Arrays.hashCode(headerBuffer);
+
+        if (dataBuffer != null)
+            hash ^= Arrays.hashCode(dataBuffer);
+
+        return hash;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null)
             return false;

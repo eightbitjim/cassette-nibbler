@@ -24,7 +24,7 @@ import com.eightbitjim.cassettenibbler.TapeExtractionLogging;
 import com.eightbitjim.cassettenibbler.TapeExtractionOptions;
 
 public class BBCFileStateMachine {
-    private static int MINIMUM_LEADER_LENGTH = 32;
+    private int MINIMUM_LEADER_LENGTH = 32;
     enum State {
         WAITING_FOR_HEADER_LEADER,
         WAITING_FOR_END_OF_HEADER_LEADER,
@@ -137,7 +137,7 @@ public class BBCFileStateMachine {
         currentLeaderIsValid = numberOfShortPulsesInARow >= MINIMUM_LEADER_LENGTH;
         if ((currentLeaderIsValid) && (
                 (state == State.GETTING_HEADER) || (state == State.GETTING_DATA) || (state == State.WAITING_FOR_HEADER_SYNC_BYTE))) {
-            logError("Leader detected unexpectedly. Resetting state machine.");
+            pushStringToPulseStream("Leader detected unexpectedly. Resetting state machine.");
             if (state == State.GETTING_DATA)
                 addDataToFile();
 
@@ -175,6 +175,12 @@ public class BBCFileStateMachine {
     }
 
     private void dealWithErrorInHeader() {
+        if (state == State.WAITING_FOR_HEADER_SYNC_BYTE) {
+            logging.writeFileParsingInformation("Was not the sync byte. Wait for leader again");
+            changeStateTo(State.WAITING_FOR_HEADER_LEADER);
+            return;
+        }
+
         logError("Error in block header. Resetting state machine.");
         reset();
         if (!options.getAttemptToRecoverCorruptedFiles())
@@ -224,7 +230,7 @@ public class BBCFileStateMachine {
 
     private void dealWithErrorInData() {
         logError("Error in block data. Resetting state machine.");
-        currentFile.isInError();
+        fileBuilder.currentFileHasAnError();
         fileBuilder.padWithZeroBytes(block.getDataBlockLength());
         reset();
         if (!options.getAttemptToRecoverCorruptedFiles())
@@ -297,7 +303,7 @@ public class BBCFileStateMachine {
 
         if (fileBuilder.getData().length > 0) {
             logError("Recovering partial file: " + block.toString());
-            currentFile.isInError();
+            fileBuilder.currentFileHasAnError();
             finiliseFile();
         }
 

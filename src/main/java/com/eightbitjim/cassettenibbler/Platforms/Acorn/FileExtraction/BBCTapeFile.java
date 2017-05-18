@@ -19,13 +19,26 @@
 package com.eightbitjim.cassettenibbler.Platforms.Acorn.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats.BBCBasicProgram;
+import com.eightbitjim.cassettenibbler.Platforms.Commodore.FileExtraction.ROMLoader.CommodoreTapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.General.FileExtraction.GenericTapeFile;
+import com.eightbitjim.cassettenibbler.Platforms.General.Formats.BinaryToASCII;
+import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public class BBCTapeFile extends GenericTapeFile {
     List<BBCFileBlock> blocks = new LinkedList<>();
+    public enum Type { BASIC, VARIABLES, BYTES, UNKNOWN }
+
+    public static final int VARIABLES_LOAD_ADDRESS = 65535;
+    public static final int BASIC_EXECUTION_ADDRESS = 32803;
+    public static final int VARIABLES_EXECUTION_ADDRESS = 65535;
+
+    public static final int NO_LOAD_ADDRESS = -1;
+    public static final int NO_EXECUTION_ADDRESS = -1;
+
+    private Type type = Type.UNKNOWN;
 
     @Override
     public boolean equals(Object o) {
@@ -43,26 +56,66 @@ public class BBCTapeFile extends GenericTapeFile {
     }
 
     @Override
+    public int hashCode() {
+        int hash = 0;
+        if (blocks != null) {
+            for (BBCFileBlock block : blocks)
+                hash ^= block.hashCode();
+        }
+
+        return hash;
+    }
+
+    @Override
     public String toString() {
         return getFilename();
     }
 
     @Override
     public String getFilename() {
-        String filename = super.getFilename();
-        return filename;
+        StringBuilder filenameBuilder = new StringBuilder();
+        String nameFromBlocks;
+        if (blocks.isEmpty())
+            nameFromBlocks = "EMPTY";
+        else
+            nameFromBlocks = blocks.get(0).getFilename();
+
+        if (nameFromBlocks == null || nameFromBlocks.length() == 0)
+            nameFromBlocks = "UNNAMED";
+
+        filenameBuilder.append(nameFromBlocks);
+        filenameBuilder.append(".").append(getType().toString().toLowerCase());
+        if (type == Type.BYTES) {
+            filenameBuilder.append(".").append(getLoadAddress());
+            filenameBuilder.append(".").append(getExecutionAddress());
+        }
+
+        return filenameBuilder.toString();
     }
 
     @Override
     public byte [] getDataBytesOfType(FormatType formatType) {
         switch (formatType) {
             case READABLE:
-                return new BBCBasicProgram(getRawData()).toString().getBytes();
+                return getReadableData();
             case EMULATOR:
                 // TODO -- implement this
                 // Fall through
             default:
                 return super.getDataBytesOfType(formatType);
+        }
+    }
+
+    private byte [] getReadableData() {
+        switch (getType()) {
+            case BASIC:
+                return new BBCBasicProgram(getRawData()).toString().getBytes();
+            case VARIABLES:
+                return "Variable files conversion to ASCII not yet supported. See binary file output instead.\n".getBytes();
+            case UNKNOWN:
+            case BYTES:
+            default:
+                return BinaryToASCII.removeUnprintableCharactersFrombinaryCharacterArray(getRawData());
         }
     }
 
@@ -76,6 +129,34 @@ public class BBCTapeFile extends GenericTapeFile {
 
     public void setData(int [] data) {
         this.data = data;
+    }
+
+    public int getLoadAddress() {
+        if (blocks.size() < 1)
+            return NO_LOAD_ADDRESS;
+        else
+            return blocks.get(0).getLoadAddress();
+    }
+
+    public int getExecutionAddress() {
+        if (blocks.size() < 1)
+            return NO_EXECUTION_ADDRESS;
+        else
+            return blocks.get(0).getExecutionAddress();
+    }
+
+    public Type getType() {
+        computeType();
+        return type;
+    }
+
+    private void computeType() {
+        if (getExecutionAddress() == BASIC_EXECUTION_ADDRESS)
+            type = Type.BASIC;
+        else if (getExecutionAddress() == VARIABLES_EXECUTION_ADDRESS)
+            type = Type.VARIABLES;
+        else
+            type = Type.BYTES;
     }
 
     @Override
