@@ -59,6 +59,9 @@ public class FileOutputFileWriter implements FileStreamConsumer {
     }
 
     private void outputSingleFileToDirectoryOfType(TapeFile file, TapeFile.FormatType formatType) {
+        if (file == null)
+            return;
+
         byte [] data = file.getDataBytesOfType(formatType);
         if (data != null) {
             try {

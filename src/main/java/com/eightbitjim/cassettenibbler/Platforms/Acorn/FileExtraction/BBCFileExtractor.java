@@ -59,11 +59,9 @@ public class BBCFileExtractor implements PulseStreamConsumer, FileStreamProvider
     }
 
     private void outputAnyOPartialFilesIfAllowed() {
-        if (options.getAttemptToRecoverCorruptedFiles()) {
-            // TODO -- need to implement this
-            TapeFile file = null;
+        TapeFile file = stateMachine.recoverAnyPartiallyReceivedFile();
+        if (file != null)
             pushFileToconsumers(file);
-        }
     }
 
     @Override
