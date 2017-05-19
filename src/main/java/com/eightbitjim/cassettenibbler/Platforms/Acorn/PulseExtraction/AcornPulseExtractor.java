@@ -117,9 +117,13 @@ public class AcornPulseExtractor implements PulseStreamProvider, IntervalStreamC
 
     @Override
     public void pushInterval(Transition transition, double currentTimeIndex) {
-        this.interval = transition;
-        this.currentTimeIndex = (long)(currentTimeIndex / NANOSECOND);
-        processInterval();
+        if (transition.isEndOfStream()) {
+            pushPulseToConsumers(PulseStreamConsumer.END_OF_STREAM);
+        } else {
+            this.interval = transition;
+            this.currentTimeIndex = (long) (currentTimeIndex / NANOSECOND);
+            processInterval();
+        }
     }
 
     private void pushPulseToConsumers(char pulseType) {

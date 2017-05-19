@@ -131,6 +131,9 @@ public class BBCFileTest implements FileStreamConsumer {
 
     @Override
     public void pushFile(TapeFile file, long currentTimeIndex) {
+        if (file == null)
+            return;
+
         assertTrue("Returned tape file is not Acorn format", file instanceof BBCTapeFile);
         results.add((BBCTapeFile) file);
     }

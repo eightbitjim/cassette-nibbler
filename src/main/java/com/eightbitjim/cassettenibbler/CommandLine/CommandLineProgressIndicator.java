@@ -158,6 +158,9 @@ public class CommandLineProgressIndicator implements FileStreamConsumer, SampleS
 
     @Override
     public void pushFile(TapeFile file, long currentTimeIndex) {
+        if (file == null)
+            return;
+
         filesExtracted++;
         setMessage(file.getFilename() + " length " + file.length());
     }

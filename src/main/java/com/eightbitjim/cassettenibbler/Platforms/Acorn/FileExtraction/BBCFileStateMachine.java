@@ -122,10 +122,16 @@ public class BBCFileStateMachine {
         }
 
         if (currentFileIsReadyToReturn) {
-            currentFileIsReadyToReturn = false;
-            return currentFile;
+            return getFileToReturnAndReset();
         } else
             return null;
+    }
+
+    private TapeFile getFileToReturnAndReset() {
+        currentFileIsReadyToReturn = false;
+        TapeFile fileToReturn = currentFile;
+        currentFile = null;
+        return fileToReturn;
     }
 
     private void checkForLeader() {
@@ -297,14 +303,20 @@ public class BBCFileStateMachine {
         fileBuilder.reset();
     }
 
+    public TapeFile recoverAnyPartiallyReceivedFile() {
+        currentFileIsReadyToReturn = false;
+        attemptToRecoverFile();
+        return getFileToReturnAndReset();
+    }
+
     private void attemptToRecoverFile() {
         if (!options.getAttemptToRecoverCorruptedFiles())
             return;
 
         if (fileBuilder.getData().length > 0) {
-            logError("Recovering partial file: " + block.toString());
             fileBuilder.currentFileHasAnError();
             finiliseFile();
+            logError("Recovering partial file");
         }
 
         fileBuilder.reset();
