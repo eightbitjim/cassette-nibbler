@@ -95,8 +95,10 @@ public class BBCFileTest implements FileStreamConsumer {
 
     @Test
     public void testBBC1200variablesFile() throws Throwable {
-        parseFile(VARIABLES_FILENAME, 1);
-        checkFileResult(0,2800, "VARIABLES.variables", 938873718, BBCTapeFile.VARIABLES_LOAD_ADDRESS);
+        parseFile(VARIABLES_FILENAME, 2);
+        checkFileResult(0,172, "PROG.basic", 1833671517, 6400);
+        checkFileResult(1,4040, "DATA.variables", -1409427906, BBCTapeFile.VARIABLES_LOAD_ADDRESS);
+        checkTextFileHash(1, -1601006811);
     }
 
     @Test
@@ -123,6 +125,12 @@ public class BBCFileTest implements FileStreamConsumer {
                 Arrays.hashCode(results.get(fileNumber).getDataBytesOfType(TapeFile.FormatType.EMULATOR)) == expectedContentHash);
         assertTrue("Load address incorrect: " + results.get(fileNumber).getLoadAddress(),
                 results.get(fileNumber).getLoadAddress() == expectedLoadAddress);
+    }
+
+    private void checkTextFileHash(int fileNumber, int expectedStringHash) {
+        BBCTapeFile file = results.get(fileNumber);
+        int hash = Arrays.hashCode(file.getDataBytesOfType(TapeFile.FormatType.READABLE));
+        assertTrue("ASCII data hash incorrect: " + hash, hash == expectedStringHash);
     }
 
     private void pushStreamThroughSystem(AudioInput reader) throws Throwable {
