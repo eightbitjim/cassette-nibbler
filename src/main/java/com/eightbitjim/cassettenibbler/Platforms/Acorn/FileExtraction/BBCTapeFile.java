@@ -19,6 +19,7 @@
 package com.eightbitjim.cassettenibbler.Platforms.Acorn.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats.BBCBasicProgram;
+import com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats.BBCBasicVariableData;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.FileExtraction.ROMLoader.CommodoreTapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.General.FileExtraction.GenericTapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.General.Formats.BinaryToASCII;
@@ -111,7 +112,7 @@ public class BBCTapeFile extends GenericTapeFile {
             case BASIC:
                 return new BBCBasicProgram(getRawData()).toString().getBytes();
             case VARIABLES:
-                return "Variable files conversion to ASCII not yet supported. See binary file output instead.\n".getBytes();
+                return new BBCBasicVariableData(getRawData()).toString().getBytes();
             case UNKNOWN:
             case BYTES:
             default:
