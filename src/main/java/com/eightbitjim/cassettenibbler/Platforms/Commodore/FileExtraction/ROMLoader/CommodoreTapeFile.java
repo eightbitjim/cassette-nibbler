@@ -319,7 +319,13 @@ public class CommodoreTapeFile extends TapeFile {
         if (data == null)
             return null;
 
-        return data.getData();
+        int [] originalData = data.getData();
+        int [] fileData = new int[data.getBlockLength()];
+
+        for (int i = 0; i < data.getBlockLength(); i++)
+            fileData[i] = originalData[i];
+
+        return fileData;
     }
 
     public int getLoadAddress() {
