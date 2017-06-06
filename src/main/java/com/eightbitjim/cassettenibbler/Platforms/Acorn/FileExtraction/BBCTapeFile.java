@@ -20,10 +20,8 @@ package com.eightbitjim.cassettenibbler.Platforms.Acorn.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats.BBCBasicProgram;
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.Formats.BBCBasicVariableData;
-import com.eightbitjim.cassettenibbler.Platforms.Commodore.FileExtraction.ROMLoader.CommodoreTapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.General.FileExtraction.GenericTapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.General.Formats.BinaryToASCII;
-import com.eightbitjim.cassettenibbler.Utilities.PrintableString;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +31,8 @@ public class BBCTapeFile extends GenericTapeFile {
     public enum Type { BASIC, VARIABLES, BYTES, UNKNOWN }
 
     public static final int VARIABLES_LOAD_ADDRESS = 65535;
-    public static final int BASIC_EXECUTION_ADDRESS = 32803;
+    public static final int BASIC_EXECUTION_ADDRESS_DISK_SYSTEM = 32803;
+    public static final int BASIC_LOAD_ADDRESS_TAPE_SYSTEM = 3584;
     public static final int VARIABLES_EXECUTION_ADDRESS = 65535;
 
     public static final int NO_LOAD_ADDRESS = -1;
@@ -86,7 +85,8 @@ public class BBCTapeFile extends GenericTapeFile {
 
         filenameBuilder.append(nameFromBlocks);
         filenameBuilder.append(".").append(getType().toString().toLowerCase());
-        if (type == Type.BYTES) {
+
+        if (getType() == Type.BYTES) {
             filenameBuilder.append(".").append(getLoadAddress());
             filenameBuilder.append(".").append(getExecutionAddress());
         }
@@ -152,12 +152,15 @@ public class BBCTapeFile extends GenericTapeFile {
     }
 
     private void computeType() {
-        if (getExecutionAddress() == BASIC_EXECUTION_ADDRESS)
+        type = Type.BYTES;
+
+        int executionAddress = getExecutionAddress();
+        int loadAddress = getLoadAddress();
+        if (loadAddress == BASIC_LOAD_ADDRESS_TAPE_SYSTEM || executionAddress == BASIC_EXECUTION_ADDRESS_DISK_SYSTEM)
             type = Type.BASIC;
-        else if (getExecutionAddress() == VARIABLES_EXECUTION_ADDRESS)
+
+        if (executionAddress == VARIABLES_EXECUTION_ADDRESS)
             type = Type.VARIABLES;
-        else
-            type = Type.BYTES;
     }
 
     @Override
