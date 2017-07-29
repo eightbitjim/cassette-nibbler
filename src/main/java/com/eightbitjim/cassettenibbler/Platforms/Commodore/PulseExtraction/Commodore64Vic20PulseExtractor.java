@@ -44,8 +44,8 @@ public class Commodore64Vic20PulseExtractor implements PulseStreamProvider, Inte
     private double longPulseMaximum;
 
     private double intervalShiftMultiplier;
-    private static final double percentageDifferenceNotToCountAsSamePulseLength = 10.0;//15.0;
-    private static final double toleranceForPulseCountingAsLeader = 1.6; // TODO, reduce
+    private static final double percentageDifferenceNotToCountAsSamePulseLength = 10.0;
+    private static final double toleranceForPulseCountingAsLeader = 1.6;
 
     private Transition interval;
     private double secondsSinceLastHighToLowTransition = 0.0;

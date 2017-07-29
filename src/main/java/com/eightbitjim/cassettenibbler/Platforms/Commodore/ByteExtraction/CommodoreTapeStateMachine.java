@@ -60,6 +60,8 @@ class CommodoreTapeStateMachine {
         pulseBuffer[bufferPointer] = pulseType;
         pulseLengthBuffer[bufferPointer] = pulseLengthInNanoSeconds;
 
+        frame.resetFrameLengthMeasurements(); // Don't allow averages if byte scraping
+
         switch (state) {
             case WAITING_FOR_LEADER:
                 checkForValidLeaderExceptLastTwoPulsesWhichMightBeANewDataMarker();
