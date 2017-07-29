@@ -121,6 +121,7 @@ public class ExtractFile {
         }
 
         preparePlatformList();
+        preparePlatformByteScrapingOutputFiles();
         printIntroductionText();
         configurePlatforms();
         linkDestinationToPlatforms();
@@ -199,7 +200,6 @@ public class ExtractFile {
         }
 
         linkSourceToPlatforms();
-        preparePlatformByteScrapingOutputFiles();
         runThroughSource();
     }
 
