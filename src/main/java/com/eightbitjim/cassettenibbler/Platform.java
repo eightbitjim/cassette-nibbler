@@ -65,6 +65,14 @@ public abstract class Platform {
         outputTypes = new LinkedList<>();
     }
 
+    public boolean hasInputType(Type type) {
+        return inputTypes.contains(type);
+    }
+
+    public boolean hasOutputType(Type type) {
+        return outputTypes.contains(type);
+    }
+
     protected void registerTypes() {
         if (sampleInput != null)
             registerInputTypes(Type.WAVEFORM);
@@ -86,6 +94,9 @@ public abstract class Platform {
 
         if (fileOutput != null)
             registerOutputTypes(Type.FILE);
+
+        if (byteOutput != null)
+            registerOutputTypes(Type.BYTE);
     }
 
     protected void registerInputTypes(Type ... types) {

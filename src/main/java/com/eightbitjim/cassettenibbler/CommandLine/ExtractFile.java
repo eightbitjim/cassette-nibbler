@@ -68,6 +68,7 @@ public class ExtractFile {
     private boolean highPassFilter = false;
     private double highPassFilterCutoff = 600.0;
     private boolean disableDefaultFilters = false;
+    private boolean scapeBytesFromInputFiles = false;
 
     private boolean needToDisplayHelp = false;
     private CommandLineProgressIndicator progressIndicator;
@@ -120,6 +121,7 @@ public class ExtractFile {
         }
 
         preparePlatformList();
+        preparePlatformByteScrapingOutputFiles();
         printIntroductionText();
         configurePlatforms();
         linkDestinationToPlatforms();
@@ -319,6 +321,35 @@ public class ExtractFile {
         }
     }
 
+    private void preparePlatformByteScrapingOutputFiles() throws PlatformAccessError {
+        if (!scapeBytesFromInputFiles)
+            return;
+
+        for (Platform platform : chosenPlatforms) {
+            if (platform.hasOutputType(Platform.Type.BYTE))
+                prepareByteScrapingFileFor(platform);
+        }
+    }
+
+    private void prepareByteScrapingFileFor(Platform platform) throws PlatformAccessError {
+        ByteStreamProvider provider = platform.getByteOutputPoint();
+        ByteStreamFileOutput output = null;
+        try {
+            output = new ByteStreamFileOutput(outputDirectory, byteScrapingFilenameFor(platform));
+            provider.registerByteStreamConsumer(output);
+        } catch (FileNotFoundException e) {
+            System.err.println(e.toString());
+        }
+    }
+
+    private String byteScrapingFilenameFor(Platform platform) {
+        StringBuilder filename = new StringBuilder();
+        filename.append("scrape.");
+        filename.append(platform.getName());
+        filename.append(".bin");
+        return filename.toString();
+    }
+
     private void linkSourceToCorrectInputPoint(Platform platform) throws PlatformAccessError {
         if (disableDefaultFilters)
             connector.registerSampleStreamConsumer(platform.getPostFilterWaveformInputPoint());
@@ -381,6 +412,9 @@ public class ExtractFile {
                         break;
                     case "-stdin":
                         inputSourceSpecified = true;
+                        break;
+                    case "-scrape":
+                        scapeBytesFromInputFiles = true;
                         break;
                     case "-nofilters":
                         disableDefaultFilters = true;
@@ -523,6 +557,7 @@ public class ExtractFile {
         System.err.println("-config=<settings>: provide optional configuration settings to the chosen platform");
         System.err.println("-invert: invert the incoming waveform before processing");
         System.err.println("-differentiate: differentiate the input signal before processing");
+        System.err.println("-scrape: output any bytes found in platform-specific files if platform supports this");
         System.err.println("-nofilters: disable default high and low pass filters on all platforms");
         System.err.println("-linein: audio from default line input device rather than audio files (experimental)");
         System.err.println("-lowpass=<freq>: pass signal through a low pass filter before processing, cutoff specified in hz");
