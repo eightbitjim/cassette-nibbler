@@ -40,16 +40,8 @@ public class ByteStreamFileOutput implements ByteStreamConsumer {
             return;
         }
 
-        if (valueOfByte == ByteStreamConsumer.END_OF_STREAM) {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                logging.writeProgramOrEnvironmentError(currentTimeIndex, "Exception while closing byte output file: " + e.toString());
-            }
-
-            outputStream = null;
+        if (valueOfByte == ByteStreamConsumer.END_OF_STREAM)
             return;
-        }
 
         try {
             outputStream.write(valueOfByte);
