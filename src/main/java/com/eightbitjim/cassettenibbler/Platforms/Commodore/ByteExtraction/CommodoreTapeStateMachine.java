@@ -50,15 +50,15 @@ class CommodoreTapeStateMachine {
     }
 
     public void addPulse(char pulseType, long pulseLengthInNanoSeconds) {
-        if (pulseType == PulseStreamConsumer.END_OF_STREAM) {
-            state = FINISHED;
+        if (pulseType == PulseStreamConsumer.END_OF_STREAM)
             return;
-        }
 
         logging.writePulse(pulseType);
         bufferPointer = (bufferPointer + 1) % SIZE_OF_PULSE_BUFFER;
         pulseBuffer[bufferPointer] = pulseType;
         pulseLengthBuffer[bufferPointer] = pulseLengthInNanoSeconds;
+
+        frame.resetFrameLengthMeasurements(); // Don't allow averages if byte scraping
 
         switch (state) {
             case WAITING_FOR_LEADER:

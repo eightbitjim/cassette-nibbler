@@ -19,6 +19,7 @@
 package com.eightbitjim.cassettenibbler.Platforms.Commodore.Platforms;
 
 import com.eightbitjim.cassettenibbler.Platform;
+import com.eightbitjim.cassettenibbler.Platforms.Commodore.ByteExtraction.CommodoreByteReader;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.FileExtraction.ROMLoader.CommodoreFileExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.Commodore.PulseExtraction.Commodore64Vic20PulseExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossingIntervalExtractor;
@@ -33,6 +34,7 @@ public class C64 extends Platform {
     ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
     Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
     CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION);
+    CommodoreByteReader byteReader = new CommodoreByteReader();
 
     public C64() {
         super();
@@ -43,6 +45,7 @@ public class C64 extends Platform {
         highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);
+        pulseExtractor.registerPulseStreamConsumer(byteReader);
 
         sampleInput = highPass;
         postFilterSampleInput = intervalExtractor;
@@ -52,6 +55,7 @@ public class C64 extends Platform {
         intervalOutput = intervalExtractor;
         pulseOutput = pulseExtractor;
         fileOutput = fileExtractor;
+        byteOutput = byteReader;
 
         registerTypes();
     }

@@ -19,6 +19,8 @@
 package com.eightbitjim.cassettenibbler.Platforms.Acorn.Platforms;
 
 import com.eightbitjim.cassettenibbler.Platform;
+import com.eightbitjim.cassettenibbler.Platforms.Acorn.ByteExtraction.ByteScraper;
+import com.eightbitjim.cassettenibbler.Platforms.Acorn.FileExtraction.AcornByte;
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.FileExtraction.BBCFileExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.PulseExtraction.AcornPulseExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossingIntervalExtractor;
@@ -32,6 +34,7 @@ public class BBC1200Baud extends Platform {
     ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
     AcornPulseExtractor pulseExtractor = new AcornPulseExtractor();
     BBCFileExtractor fileExtractor = new BBCFileExtractor(true);
+    ByteScraper byteScraper = new ByteScraper(AcornByte.Baud.BAUD_1200);
 
     public BBC1200Baud() {
         super();
@@ -43,6 +46,7 @@ public class BBC1200Baud extends Platform {
         highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);
+        pulseExtractor.registerPulseStreamConsumer(byteScraper);
 
         sampleInput = lowPass;
         postFilterSampleInput = intervalExtractor;
@@ -52,6 +56,7 @@ public class BBC1200Baud extends Platform {
         intervalOutput = intervalExtractor;
         pulseOutput = pulseExtractor;
         fileOutput = fileExtractor;
+        byteOutput = byteScraper;
 
         registerTypes();
     }
