@@ -35,14 +35,14 @@ public class AcornByte {
     private int content;
     private int currentBitNumber;
     private boolean error;
-    private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private long currentTimeIndex;
     private char currentPulse;
     private int shortCyclesInARow;
     private int longCyclesInARow;
 
-    public AcornByte(Baud baud) {
+    public AcornByte(Baud baud, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         this.baud = baud;
         reset();
     }

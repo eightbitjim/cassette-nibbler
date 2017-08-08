@@ -59,11 +59,14 @@ public class FileStateMachine implements PulseStreamConsumer, FileStreamProvider
 
     private long currentTimeIndex;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
+    private transient String channelName;
 
     private boolean leaderIsCurrentlyValid;
 
-    public FileStateMachine() {
+    public FileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         fileStreamConsumers = new LinkedList<>();
         pulseStreamConsumers = new LinkedList<>();
         state = State.WAITING_FOR_LEADER;
@@ -166,12 +169,12 @@ public class FileStateMachine implements PulseStreamConsumer, FileStreamProvider
 
     private void createNewFileBlock() {
         createNewFileIfNeeded();
-        currentBlock = new FileBlock(currentFile.getNumberOfSubsectionsInNextBlock());
+        currentBlock = new FileBlock(currentFile.getNumberOfSubsectionsInNextBlock(), channelName);
     }
 
     private void createNewFileIfNeeded() {
         if (currentFile == null)
-            currentFile = new AmstradTapeFile();
+            currentFile = new AmstradTapeFile(channelName);
     }
 
     private void resetByte() {
@@ -302,7 +305,7 @@ public class FileStateMachine implements PulseStreamConsumer, FileStreamProvider
             fileStack.add(currentFile);
         }
 
-        currentFile = new AmstradTapeFile();
+        currentFile = new AmstradTapeFile(channelName);
     }
 
     private char currentPulse() {

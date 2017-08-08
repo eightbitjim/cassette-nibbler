@@ -24,6 +24,8 @@ import com.eightbitjim.cassettenibbler.Platforms.Sinclair.Platforms.ZXSpectrum;
 
 public class SinclairPlatformProvider extends PlatformProvider {
     public SinclairPlatformProvider() {
-        add(new ZX81(), new ZXSpectrum());
+
+        add(new ZX81(),
+                new ZXSpectrum());
     }
 }

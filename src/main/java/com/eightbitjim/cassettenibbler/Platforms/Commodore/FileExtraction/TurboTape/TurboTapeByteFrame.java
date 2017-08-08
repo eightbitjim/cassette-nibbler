@@ -42,10 +42,10 @@ public class TurboTapeByteFrame {
     private int valueToReturn;
     private char currentPulse;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
-    private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+    private transient TapeExtractionLogging logging;
 
-    public TurboTapeByteFrame() {
+    public TurboTapeByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

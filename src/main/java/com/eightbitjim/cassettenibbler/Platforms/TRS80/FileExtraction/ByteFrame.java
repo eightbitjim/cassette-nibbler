@@ -35,14 +35,15 @@ public class ByteFrame {
     private int currentBitNumber;
     private boolean error;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private long currentTimeIndex;
     private char currentPulse;
 
     private int pulsesSinceLastByte;
     private static final int maximumPulsesSinceByte = 20;
 
-    public ByteFrame() {
+    public ByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

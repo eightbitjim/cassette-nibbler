@@ -37,8 +37,8 @@ public class BBCFileExtractor implements PulseStreamConsumer, FileStreamProvider
     private char currentPulse;
     private BBCFileStateMachine stateMachine;
 
-    public BBCFileExtractor(boolean is1200BaudNot300) {
-        stateMachine = new BBCFileStateMachine(is1200BaudNot300);
+    public BBCFileExtractor(boolean is1200BaudNot300, String channelName) {
+        stateMachine = new BBCFileStateMachine(is1200BaudNot300, channelName);
         fileStreamConsumers = new LinkedList<>();
     }
 

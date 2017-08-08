@@ -32,10 +32,6 @@ public class TurboTapeFile extends TapeFile {
     private int currentByte;
     private static final int cascadeStartAddress = 0x0801;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
-    private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-
-
     public TurboTapeFile() {
         data = new LinkedList<>();
     }

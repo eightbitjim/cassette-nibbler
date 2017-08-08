@@ -23,6 +23,7 @@ import com.eightbitjim.cassettenibbler.SampleStreamConsumer;
 import com.eightbitjim.cassettenibbler.SampleStreamProvider;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -33,14 +34,14 @@ public class AudioInput implements SampleStreamProvider {
     private Sample sampleToPush;
     private AudioFile file;
 
-    public AudioInput(String filename) throws IOException, UnsupportedAudioFileException {
+    public AudioInput(String filename, String channelName) throws IOException, UnsupportedAudioFileException {
         sampleToPush = new Sample();
-        file = new AudioFile(filename);
+        file = new AudioFile(new FileInputStream(filename), channelName);
     }
 
-    public AudioInput(InputStream inputStream) throws IOException, UnsupportedAudioFileException {
+    public AudioInput(InputStream inputStream, String channelName) throws IOException, UnsupportedAudioFileException {
         sampleToPush = new Sample();
-        file = new AudioFile(inputStream);
+        file = new AudioFile(inputStream, channelName);
     }
 
     public boolean processNextSampleAndReturnTrueIfFinished() {

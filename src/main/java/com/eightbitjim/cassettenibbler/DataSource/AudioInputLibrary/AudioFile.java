@@ -36,15 +36,17 @@ public class AudioFile {
     private InputStream inputStream;
 
     private AudioInputStream audioInputStream;
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
 
-    public AudioFile(String filename) throws IOException, UnsupportedAudioFileException {
+    public AudioFile(String filename, String channelName) throws IOException, UnsupportedAudioFileException {
+        logging = TapeExtractionLogging.getInstance(channelName);
         totalFramesReceived = 0;
         openFileFromFilename(filename);
         initialise();
     }
 
-    public AudioFile(InputStream inputStream) throws IOException, UnsupportedAudioFileException {
+    public AudioFile(InputStream inputStream, String channelName) throws IOException, UnsupportedAudioFileException {
+        logging = TapeExtractionLogging.getInstance(channelName);
         totalFramesReceived = 0;
         this.inputStream = inputStream;
         initialise();

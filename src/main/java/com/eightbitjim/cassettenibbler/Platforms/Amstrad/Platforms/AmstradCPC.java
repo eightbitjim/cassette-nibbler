@@ -27,17 +27,22 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
 
 public class AmstradCPC extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    AmstradPulseExtractor pulseExtractor = new AmstradPulseExtractor();
-    FileStateMachine fileExtractor = new FileStateMachine();
-
     public AmstradCPC() {
         super();
 
         name = "amstrad";
         description = "Amstrad CPC 464";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        AmstradPulseExtractor pulseExtractor = new AmstradPulseExtractor(channelName);
+        FileStateMachine fileExtractor = new FileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

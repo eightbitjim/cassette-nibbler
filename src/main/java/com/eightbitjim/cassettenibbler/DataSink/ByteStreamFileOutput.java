@@ -26,11 +26,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class ByteStreamFileOutput implements ByteStreamConsumer {
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private FileOutputStream outputStream;
 
-    public ByteStreamFileOutput(String directory, String filename) throws FileNotFoundException {
+    public ByteStreamFileOutput(String directory, String filename, String channelName) throws FileNotFoundException {
         outputStream = new FileOutputStream(getFilePath(directory, filename));
+        logging = TapeExtractionLogging.getInstance(channelName);
     }
 
     @Override

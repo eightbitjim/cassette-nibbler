@@ -27,17 +27,23 @@ import com.eightbitjim.cassettenibbler.Platforms.TRS80.FileExtraction.TapeFile;
 import com.eightbitjim.cassettenibbler.Platforms.TRS80.PulseExtraction.TRS80PulseExtractor;
 
 public class Dragon32 extends Platform {
-    LowPass lowPass = new LowPass(3000);
-    HighPass highPass = new HighPass(800);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    TRS80PulseExtractor pulseExtractor = new TRS80PulseExtractor();
-    FileStateMachine fileExtractor = new FileStateMachine(TapeFile.FileType.DRAGON32);
 
     public Dragon32() {
         super();
 
         name = "dragon32";
         description = "Dragon 32 (experimental)";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(3000, channelName);
+        HighPass highPass = new HighPass(800, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        TRS80PulseExtractor pulseExtractor = new TRS80PulseExtractor();
+        FileStateMachine fileExtractor = new FileStateMachine(TapeFile.FileType.DRAGON32, channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

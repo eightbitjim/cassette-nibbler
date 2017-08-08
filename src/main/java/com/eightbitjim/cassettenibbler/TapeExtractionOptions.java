@@ -18,27 +18,26 @@
 
 package com.eightbitjim.cassettenibbler;
 
-import java.io.PrintStream;
-
 public class TapeExtractionOptions {
     public enum LoggingMode {
         FILE_PARSING_PULSES,
         VERBOSE,
         MINIMAL,
-        NONE_SHOW_PROGRESS}
+        NONE
+    }
 
     protected boolean allowIncorrectFrameChecksums;
     protected boolean allowIncorrectFileChecksums;
     protected boolean attemptToRecoverCorruptedFiles;
 
     protected LoggingMode loggingMode;
-    protected PrintStream logWriter;
+    protected String logBaseFilename; // Null if not logging to files
 
     private static TapeExtractionOptions instance = null;
 
     protected TapeExtractionOptions() {
-        loggingMode = LoggingMode.NONE_SHOW_PROGRESS;
-        logWriter = System.err;
+        loggingMode = LoggingMode.NONE;
+        logBaseFilename = null; // Don't log to file
     }
 
     public static TapeExtractionOptions getInstance() {
@@ -48,19 +47,13 @@ public class TapeExtractionOptions {
         return instance;
     }
 
-    public TapeExtractionOptions setLogging(PrintStream outputTo, LoggingMode verbosity) {
-        loggingMode = verbosity;
-        logWriter = outputTo;
-        return this;
+    public String getLogBaseFilename() {
+        return logBaseFilename;
     }
 
-    public TapeExtractionOptions setLogging(LoggingMode verbosity) {
+    public TapeExtractionOptions setLogging(LoggingMode verbosity, String logBasefilenameOrNullForStdErr) {
         loggingMode = verbosity;
-        return this;
-    }
-
-    public TapeExtractionOptions setLogging(PrintStream outputTo) {
-        logWriter = outputTo;
+        logBaseFilename = logBasefilenameOrNullForStdErr;
         return this;
     }
 
@@ -78,8 +71,6 @@ public class TapeExtractionOptions {
         attemptToRecoverCorruptedFiles = isEnabled;
         return this;
     }
-
-    public PrintStream getLogWriter() {return logWriter; }
 
     public LoggingMode getLogVerbosity() {return loggingMode; }
 

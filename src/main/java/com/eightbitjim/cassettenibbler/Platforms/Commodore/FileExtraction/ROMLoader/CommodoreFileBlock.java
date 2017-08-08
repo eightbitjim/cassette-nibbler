@@ -52,11 +52,12 @@ public class CommodoreFileBlock {
 
     protected CommodoreFileBlock nextBlock;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
     public enum DataStatus { SUCCESS, ERROR, IN_PROGRESS }
 
-    public CommodoreFileBlock() {
+    public CommodoreFileBlock(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         data = new int[MAXIMUM_DATA_LENGTH];
         validDataHere = new boolean[MAXIMUM_DATA_LENGTH];
         prepareFields();

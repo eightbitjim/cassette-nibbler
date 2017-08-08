@@ -38,9 +38,9 @@ public class CommodoreFileExtractor implements PulseStreamConsumer, FileStreamPr
     private long currentTimeIndex;
     private char currentPulse;
 
-    public CommodoreFileExtractor(String defaultFileExtension) {
+    public CommodoreFileExtractor(String defaultFileExtension, String channelName) {
         consumers = new LinkedList<>();
-        stateMachine = new CommodoreBlockRecognisingStateMachine(defaultFileExtension);
+        stateMachine = new CommodoreBlockRecognisingStateMachine(defaultFileExtension, channelName);
     }
 
     public void processPulse() {

@@ -31,10 +31,10 @@ public class FileBuilder {
     private int [] filename;
     private int previousBlockNumber;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
-    public FileBuilder() {
-
+    public FileBuilder(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         filename = new int[0];
         previousBlockNumber = -1;
         currentFile = new BBCTapeFile();

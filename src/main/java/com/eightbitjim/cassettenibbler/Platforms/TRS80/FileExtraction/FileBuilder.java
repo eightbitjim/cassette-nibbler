@@ -28,11 +28,14 @@ public class FileBuilder {
     private transient TapeFile currentFile;
     private transient TapeBlock currentBlock;
     private transient Queue<TapeFile> builtFiles;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
     private transient TapeFile.FileType fileType;
+    private transient String channelName;
 
-    public FileBuilder(TapeFile.FileType fileType) {
+    public FileBuilder(TapeFile.FileType fileType, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         this.fileType = fileType;
         builtFiles = new LinkedList<>();
     }
@@ -79,7 +82,7 @@ public class FileBuilder {
         if (currentBlock.getType() != TapeBlock.BlockType.NAMEFILE) {
             currentFile.hasAnError();
             logging.writeFileParsingInformation("Creating dummy header block");
-            TapeBlock dummyHeader = TapeBlock.createDummyNamefile();
+            TapeBlock dummyHeader = TapeBlock.createDummyNamefile(channelName);
             currentFile.addBlock(dummyHeader);
         }
     }

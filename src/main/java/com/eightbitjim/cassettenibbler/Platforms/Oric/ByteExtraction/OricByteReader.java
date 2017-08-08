@@ -31,9 +31,13 @@ public class OricByteReader implements PulseStreamConsumer, ByteStreamProvider {
     private List <ByteStreamConsumer> byteStreamConsumers = new LinkedList<>();
     private char currentPulse;
     private long currentTimeIndex;
-    private OricByteFrame frame = new OricByteFrame();
+    private OricByteFrame frame;
     private boolean silenceBeforeThisByte;
     private long erroneousPulsesBeforeThisByte;
+
+    public OricByteReader(String channelName) {
+        frame = new OricByteFrame(channelName);
+    }
 
     @Override
     public void registerByteStreamConsumer(ByteStreamConsumer consumer) {

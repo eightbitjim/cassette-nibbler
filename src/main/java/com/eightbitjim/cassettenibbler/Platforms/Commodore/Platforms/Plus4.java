@@ -26,15 +26,20 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossi
 public class Plus4 extends Platform {
     private static final String C16PLUS4_DEFAULT_FILE_EXTENSION = "c16plus4";
 
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    Commodore16Plus4PulseExtractor pulseExtractor = new Commodore16Plus4PulseExtractor();
-    CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C16PLUS4_DEFAULT_FILE_EXTENSION);
-
     public Plus4() {
         super();
 
         name = "plus4";
         description = "Commodore Plus 4";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        Commodore16Plus4PulseExtractor pulseExtractor = new Commodore16Plus4PulseExtractor();
+        CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C16PLUS4_DEFAULT_FILE_EXTENSION, channelName);
 
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);

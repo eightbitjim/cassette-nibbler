@@ -44,6 +44,8 @@ public class CommodoreFileTest implements FileStreamConsumer {
     private ZeroCrossingIntervalExtractor intervalExtractor;
     private List<CommodoreTapeFile> results;
 
+    private String channelName = "channel";
+
     private static final String PATH_TO_TEST_FILES = "src/test/testFiles/";
     private static final String ONE_FILE_FILENAME = PATH_TO_TEST_FILES + "c64file.wav";
     private static final String ORPHAN_DATA_FILENAME = PATH_TO_TEST_FILES + "c64orphandatablock.wav";
@@ -58,8 +60,8 @@ public class CommodoreFileTest implements FileStreamConsumer {
 
     @Before
     public void individualSetup() {
-        TapeExtractionOptions.getInstance().setLogging(TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS);
-        fileExtractor = new CommodoreFileExtractor(FILE_EXTENSION);
+        TapeExtractionOptions.getInstance().setLogging(TapeExtractionOptions.LoggingMode.NONE, null);
+        fileExtractor = new CommodoreFileExtractor(FILE_EXTENSION, channelName);
         pulseExtractor64 = new Commodore64Vic20PulseExtractor(false);
         intervalExtractor = new ZeroCrossingIntervalExtractor();
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor64);
@@ -125,7 +127,7 @@ public class CommodoreFileTest implements FileStreamConsumer {
     }
 
     private void parseFile(String filename, int numberOfExpectedResults) throws Throwable {
-        AudioInput reader = new AudioInput(filename);
+        AudioInput reader = new AudioInput(filename, channelName);
         try {
             reader.registerSampleStreamConsumer(intervalExtractor);
             pushStreamTrhoughSystem(reader);

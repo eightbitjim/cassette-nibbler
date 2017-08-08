@@ -20,7 +20,7 @@ package com.eightbitjim.cassettenibbler.CommandLine;
 
 public class Version {
     public static final int major = 0;
-    public static final int minor = 1;
+    public static final int minor = 2;
     public static final String printableNumber = "v" + major + "." + minor;
     public static final String programName = "cassette-nibbler";
     public static final String title = programName + " " + printableNumber;

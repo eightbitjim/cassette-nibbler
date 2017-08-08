@@ -34,7 +34,7 @@ public class ApplePulseExtractor implements IntervalStreamConsumer, PulseStreamP
     private static final int ZERO_PULSE_MICROSECONDS = 250;
     private static final int ONE_PULSE_MICROSECONDS = 500;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private State state;
     private ApplePilotToneDetection pilotToneDetection;
     private List<PulseStreamConsumer> consumers;
@@ -44,7 +44,8 @@ public class ApplePulseExtractor implements IntervalStreamConsumer, PulseStreamP
     private boolean secondTStateInWave;
     private long currentTimeIndex;
 
-    public ApplePulseExtractor() {
+    public ApplePulseExtractor(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         consumers = new LinkedList<>();
         pilotToneDetection = new ApplePilotToneDetection();
         currentTimeIndex = 0;

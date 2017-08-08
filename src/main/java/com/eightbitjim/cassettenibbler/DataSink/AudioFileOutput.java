@@ -34,9 +34,10 @@ import java.io.IOException;
 public class AudioFileOutput implements SampleStreamConsumer {
     private File out;
     private ByteArrayOutputStream outputStream;
-    TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    TapeExtractionLogging logging;
 
-    public AudioFileOutput(String filename) {
+    public AudioFileOutput(String filename, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         out = new File(filename);
         outputStream = new ByteArrayOutputStream();
     }

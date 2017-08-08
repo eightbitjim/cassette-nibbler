@@ -27,8 +27,9 @@ import java.util.List;
 public class AtariFileStateMachine implements FileStreamProvider, PulseStreamConsumer {
     private transient List<FileStreamConsumer> consumerList = new LinkedList<>();
     private transient long currentTimeIndex;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+    private transient String channelName;
     private transient char currentPulse;
 
     private enum State {WAITING_FOR_LEADER_BYTES, RECEIVING_DATA }
@@ -43,8 +44,10 @@ public class AtariFileStateMachine implements FileStreamProvider, PulseStreamCon
     private static final int maximumErroreousBytesInARowInFile = 3;
     private static final int minimumSizeOfOrphanHeader = 64;
 
-    public AtariFileStateMachine() {
-        currentByte = new AtariByteFrame();
+    public AtariFileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
+        currentByte = new AtariByteFrame(channelName);
         leaderRecogniser = new AtariLeaderRecogniser();
         reset();
     }
@@ -129,7 +132,7 @@ public class AtariFileStateMachine implements FileStreamProvider, PulseStreamCon
 
     private void createNewBlock() {
         logging.writeFileParsingInformation("Creating new atari tape block");
-        currentBlock = new AtariTapeBlock();
+        currentBlock = new AtariTapeBlock(channelName);
     }
 
     private void processPulseInBlock() {

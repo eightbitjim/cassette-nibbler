@@ -29,6 +29,7 @@ public abstract class Platform {
 
     protected String name;
     protected String description;
+
     protected String configurationString;
 
     protected SampleStreamConsumer sampleInput;
@@ -42,12 +43,12 @@ public abstract class Platform {
     protected FileStreamProvider fileOutput;
 
     public Platform() {
-        name = "UNNAMED";
-        description = "";
         configurationString = "";
         initialiseInputTypes();
         initialiseOutputTypes();
     }
+
+    public abstract void initialise(String channelName);
 
     public boolean hasHighProcessingOverhead() {
         return false;

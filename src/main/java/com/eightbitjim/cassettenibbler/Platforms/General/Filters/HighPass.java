@@ -41,11 +41,12 @@ public class HighPass implements SampleStreamConsumer, SampleStreamProvider {
     private double y1;
     private double x1;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
 
-    public HighPass(double cutoffFrequencyInHertz) {
+    public HighPass(double cutoffFrequencyInHertz, String channelName) {
         consumers = new LinkedList<>();
         this.cutoffFrequencyInHertz = cutoffFrequencyInHertz;
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

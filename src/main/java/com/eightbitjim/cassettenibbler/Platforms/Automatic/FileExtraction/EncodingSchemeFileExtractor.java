@@ -27,26 +27,10 @@ import java.util.List;
 
 public class EncodingSchemeFileExtractor implements PulseStreamConsumer, FileStreamProvider {
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
     List<Integer> data;
     List<FileStreamConsumer> consumers;
-
-    @Override
-    public void registerFileStreamConsumer(FileStreamConsumer consumer) {
-        if (!consumers.contains(consumer))
-            consumers.add(consumer);
-    }
-
-    @Override
-    public void deregisterFileStreamConsumer(FileStreamConsumer consumer) {
-        consumers.remove(consumer);
-    }
-
-    private void pushFileToComsumers(TapeFile file) {
-        for (FileStreamConsumer consumer : consumers)
-            consumer.pushFile(file, currentTimeIndex);
-    }
 
     enum State { INTER_BYTE_GAP, RECEIVING_BYTE }
     private State state;
@@ -68,7 +52,8 @@ public class EncodingSchemeFileExtractor implements PulseStreamConsumer, FileStr
     private int currentByte;
     private int errors;
 
-    public EncodingSchemeFileExtractor(EncodingScheme scheme, int initialPulsesToSkip) {
+    public EncodingSchemeFileExtractor(EncodingScheme scheme, int initialPulsesToSkip, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         this.scheme = scheme;
         this.initialPulsesToSkip = initialPulsesToSkip;
         this.pulsesLeftToSkip = initialPulsesToSkip;
@@ -77,6 +62,22 @@ public class EncodingSchemeFileExtractor implements PulseStreamConsumer, FileStr
         consumers = new LinkedList<>();
     }
 
+    @Override
+    public void registerFileStreamConsumer(FileStreamConsumer consumer) {
+        if (!consumers.contains(consumer))
+            consumers.add(consumer);
+    }
+
+    @Override
+    public void deregisterFileStreamConsumer(FileStreamConsumer consumer) {
+        consumers.remove(consumer);
+    }
+
+    private void pushFileToComsumers(TapeFile file) {
+        for (FileStreamConsumer consumer : consumers)
+            consumer.pushFile(file, currentTimeIndex);
+    }
+    
     private void reset() {
         interByteGapPulsesLeft = 0;
         bitsReceivedInByte = 0;

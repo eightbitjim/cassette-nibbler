@@ -37,10 +37,10 @@ public class ByteScraper implements ByteStreamProvider, PulseStreamConsumer{
     private boolean firstPulse;
     private long errorsSinceLastByte;
 
-    public ByteScraper(AcornByte.Baud baudRate) {
+    public ByteScraper(AcornByte.Baud baudRate, String channelName) {
         errorsSinceLastByte = 0;
         firstPulse = true;
-        acornByte = new AcornByte(baudRate);
+        acornByte = new AcornByte(baudRate, channelName);
         consumers = new LinkedList<>();
     }
 

@@ -27,7 +27,7 @@ import java.util.List;
 public class MSXFileStateMachine implements FileStreamProvider, PulseStreamConsumer {
     private transient List<FileStreamConsumer> consumerList = new LinkedList<>();
     private transient long currentTimeIndex;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
     private transient char currentPulse;
 
@@ -40,13 +40,16 @@ public class MSXFileStateMachine implements FileStreamProvider, PulseStreamConsu
     private transient MSXTapeBlock currentBlock;
     private transient MSXByteFrame currentByte;
     private transient MSXTapeFile currentFile;
+    private transient String channelName;
 
     private int erroneousBytesInARow;
     private static final int maximumErroreousBytesInARowInFile = 3;
     private static final int minimumSizeOfOrphanHeader = 64;
 
-    public MSXFileStateMachine() {
-        currentByte = new MSXByteFrame();
+    public MSXFileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
+        currentByte = new MSXByteFrame(channelName);
         reset();
     }
 
@@ -175,7 +178,7 @@ public class MSXFileStateMachine implements FileStreamProvider, PulseStreamConsu
     }
 
     private void createNewBlock() {
-        currentBlock = new MSXTapeBlock(currentFile.nextBlockType());
+        currentBlock = new MSXTapeBlock(currentFile.nextBlockType(), channelName);
     }
 
     private void processPulseInBlock() {

@@ -38,8 +38,8 @@ public class TurboTapeFileExtractor implements FileStreamProvider, PulseStreamCo
 
     private int mimumAcceptableFileSizeInBytes = 8;
 
-    public TurboTapeFileExtractor() {
-        stateMachine = new TurboTapeFileStateMachine();
+    public TurboTapeFileExtractor(String channelName) {
+        stateMachine = new TurboTapeFileStateMachine(channelName);
     }
 
     @Override

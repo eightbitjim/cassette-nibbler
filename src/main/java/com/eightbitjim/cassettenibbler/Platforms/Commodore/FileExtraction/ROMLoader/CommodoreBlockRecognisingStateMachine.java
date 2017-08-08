@@ -45,7 +45,9 @@ public class CommodoreBlockRecognisingStateMachine {
     protected enum RepeatedStatus { REPEATED, NOT_REPEATED, UNDETERMINED }
 
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
+    private transient String channelName;
+
     private CommodoreFileBuilder fileBuilder;
     private State state;
     private CommodoreFileBlock block;
@@ -64,12 +66,14 @@ public class CommodoreBlockRecognisingStateMachine {
 
     private Queue<TapeFile> filesToReturn = new LinkedList<>();
 
-    public CommodoreBlockRecognisingStateMachine(String defaultFileExtension) {
-        frame = new CommodoreByteFrame();
+    public CommodoreBlockRecognisingStateMachine(String defaultFileExtension, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
+        frame = new CommodoreByteFrame(channelName);
         switchStateTo(State.WAITING_FOR_LEADER);
         firstPulse = true;
         leaderOrTrailerCurrentlyValid = false;
-        fileBuilder = new CommodoreFileBuilder(defaultFileExtension);
+        fileBuilder = new CommodoreFileBuilder(defaultFileExtension, channelName);
     }
 
     private void switchStateTo(State destinationState) {
@@ -88,7 +92,7 @@ public class CommodoreBlockRecognisingStateMachine {
                 frame.reset();
                 frame.resetFrameLengthMeasurements();
                 frame.addPulseAndReturnStatus(currentPulse, currentPulseLengthInNanoseconds);
-                block = new CommodoreFileBlock();
+                block = new CommodoreFileBlock(channelName);
                 break;
 
             case RECEIVING_CONTENT:

@@ -27,14 +27,16 @@ import java.io.InputStream;
 public class AmstradBasic {
     InputStream inputStream;
     private String programString;
-    TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    TapeExtractionLogging logging;
 
-    public AmstradBasic(byte [] data) {
+    public AmstradBasic(byte [] data, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         inputStream = new ByteArrayInputStream(data);
         constructProgramString();
     }
 
-    public AmstradBasic(InputStream inputStream) {
+    public AmstradBasic(InputStream inputStream, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         this.inputStream = inputStream;
         constructProgramString();
     }

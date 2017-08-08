@@ -27,17 +27,22 @@ import com.eightbitjim.cassettenibbler.Platforms.MSX.PulseExtraction.MSXPulseExt
 
 public class MSX1200 extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    MSXPulseExtractor pulseExtractor = new MSXPulseExtractor(MSXPulseExtractor.Baud.BAUD_1200);
-    MSXFileStateMachine fileExtractor = new MSXFileStateMachine();
-
     public MSX1200() {
         super();
 
         name = "msx1200";
         description = "MSX compatible computer 1200 baud";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        MSXPulseExtractor pulseExtractor = new MSXPulseExtractor(MSXPulseExtractor.Baud.BAUD_1200);
+        MSXFileStateMachine fileExtractor = new MSXFileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

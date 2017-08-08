@@ -44,6 +44,7 @@ public class SpectrumFileTest implements FileStreamConsumer {
     private LowPass lowPassFilter;
     private List<SpectrumTapeFile> results;
     private TapeExtractionOptions tapeExtractionOptions = TapeExtractionOptions.getInstance();
+    private String channelName = "channel";
 
     private static final String PATH_TO_TEST_FILES = "src/test/testFiles/";
     private static final String ONE_FILE_FILENAME = PATH_TO_TEST_FILES + "spectrumFileOne.wav";
@@ -58,13 +59,13 @@ public class SpectrumFileTest implements FileStreamConsumer {
     public void individualSetup() {
         int lowPassFilterAmountInHertz = 2400;
 
-        tapeExtractionOptions.setLogging(TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS);
+        tapeExtractionOptions.setLogging(TapeExtractionOptions.LoggingMode.NONE, null);
         tapeExtractionOptions.setAttemptToRecoverCorruptedFiles(true);
         tapeExtractionOptions.setAllowIncorrectFileChecksums(true);
 
-        fileExtractor = new SpectrumFileStateMachine();
-        pulseExtractor = new SpectrumPulseExtractor();
-        lowPassFilter = new LowPass(lowPassFilterAmountInHertz);
+        fileExtractor = new SpectrumFileStateMachine(channelName);
+        pulseExtractor = new SpectrumPulseExtractor(channelName);
+        lowPassFilter = new LowPass(lowPassFilterAmountInHertz, channelName);
         intervalExtractor = new ZeroCrossingIntervalExtractor();
         lowPassFilter.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
@@ -116,7 +117,7 @@ public class SpectrumFileTest implements FileStreamConsumer {
     }
 
     private void parseFile(String filename, int numberOfExpectedResults) throws Throwable {
-        AudioInput reader = new AudioInput(filename);
+        AudioInput reader = new AudioInput(filename, channelName);
         try {
             reader.registerSampleStreamConsumer(lowPassFilter);
             pushStreamTrhoughSystem(reader);

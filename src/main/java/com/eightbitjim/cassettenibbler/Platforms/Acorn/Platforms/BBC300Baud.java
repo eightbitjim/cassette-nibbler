@@ -29,18 +29,22 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
 
 public class BBC300Baud extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    AcornPulseExtractor pulseExtractor = new AcornPulseExtractor();
-    BBCFileExtractor fileExtractor = new BBCFileExtractor(false);
-    ByteScraper byteScraper = new ByteScraper(AcornByte.Baud.BAUD_300);
-
     public BBC300Baud() {
         super();
 
         name = "acorn300";
         description = "Acorn BBC Micro A, B and Master Series, Acorn Electron at 300 baud (slow)";
+    }
+
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        AcornPulseExtractor pulseExtractor = new AcornPulseExtractor();
+        BBCFileExtractor fileExtractor = new BBCFileExtractor(false, channelName);
+        ByteScraper byteScraper = new ByteScraper(AcornByte.Baud.BAUD_300, channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

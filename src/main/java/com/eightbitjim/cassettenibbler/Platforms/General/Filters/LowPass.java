@@ -28,7 +28,7 @@ import java.util.List;
 
 public class LowPass implements SampleStreamConsumer, SampleStreamProvider {
     private double sampleTimeInSeconds;
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private List<SampleStreamConsumer> consumers;
 
     private double RC;
@@ -41,9 +41,10 @@ public class LowPass implements SampleStreamConsumer, SampleStreamProvider {
     private double cutoffInHertz;
     Sample modifiedSample;
 
-    public LowPass(double cutoffInHertz) {
+    public LowPass(double cutoffInHertz, String channelName) {
         consumers = new LinkedList<>();
         this.cutoffInHertz = cutoffInHertz;
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

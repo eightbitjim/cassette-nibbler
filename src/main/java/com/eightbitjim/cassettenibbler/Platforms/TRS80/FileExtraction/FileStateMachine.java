@@ -27,7 +27,7 @@ import java.util.List;
 public class FileStateMachine implements FileStreamProvider, PulseStreamConsumer {
     private transient List<FileStreamConsumer> consumerList = new LinkedList<>();
     private transient long currentTimeIndex;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
     private transient char currentPulse;
 
@@ -39,14 +39,17 @@ public class FileStateMachine implements FileStreamProvider, PulseStreamConsumer
     private transient TapeBlock currentBlock;
     private transient ByteFrame currentByte;
     private transient FileBuilder fileBuilder;
+    private transient String channelName;
 
     private int erroneousBytesInARow;
     private static final int maximumErroreousBytesInARowInFile = 3;
 
-    public FileStateMachine(TapeFile.FileType fileType) {
-        currentByte = new ByteFrame();
+    public FileStateMachine(TapeFile.FileType fileType, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
+        currentByte = new ByteFrame(channelName);
         leaderRecogniser = new LeaderRecogniser();
-        fileBuilder = new FileBuilder(fileType);
+        fileBuilder = new FileBuilder(fileType, channelName);
         reset();
     }
 
@@ -137,7 +140,7 @@ public class FileStateMachine implements FileStreamProvider, PulseStreamConsumer
     }
 
     private void createNewBlock() {
-        currentBlock = new TapeBlock();
+        currentBlock = new TapeBlock(channelName);
     }
 
     private void receiveBlock() {

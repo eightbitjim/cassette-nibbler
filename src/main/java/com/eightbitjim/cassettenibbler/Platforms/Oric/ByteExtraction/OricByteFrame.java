@@ -49,10 +49,11 @@ public class OricByteFrame {
     private int valueToReturn;
     private char currentPulse;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
-    public OricByteFrame() {
+    public OricByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 
