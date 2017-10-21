@@ -47,9 +47,10 @@ public class BBCFileBlock {
     private boolean errorInHeader;
 
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
-    public BBCFileBlock() {
+    public BBCFileBlock(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

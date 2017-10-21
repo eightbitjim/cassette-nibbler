@@ -37,10 +37,10 @@ public class CommodoreByteReader implements PulseStreamConsumer, ByteStreamProvi
     private long lastTimeIndex;
     private boolean firstPulse;
 
-    public CommodoreByteReader() {
+    public CommodoreByteReader(String channelName) {
         firstPulse = true;
         consumers = new LinkedList<>();
-        stateMachine = new CommodoreTapeStateMachine();
+        stateMachine = new CommodoreTapeStateMachine(channelName);
     }
 
     public void close() throws IOException {

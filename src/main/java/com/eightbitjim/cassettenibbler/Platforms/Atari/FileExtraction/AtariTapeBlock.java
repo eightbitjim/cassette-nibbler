@@ -42,10 +42,11 @@ public class AtariTapeBlock {
     private static final int LAST_DATA_RECORD_CONTROL_BYTE = 0xfa;
     private static final int EOF_CONTROL_BYTE = 0xfe;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
-    public AtariTapeBlock() {
+    public AtariTapeBlock(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         data = new ArrayList<>();
         this.type = BlockType.UNKNOWN;
         bytesReceived = 0;

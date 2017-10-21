@@ -31,7 +31,7 @@ public class CommodoreTapeFile extends TapeFile {
     private List<CommodoreFileBlock> blocks = new LinkedList<>();
     public enum Type {PRG, NRP, SEQ, UNKNOWN, ORPHAN_DATA_BLOCK, ORPHAN_SEQ_BLOCK}
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private static final int C64_PROGRAM_START_ADDRESS = 2049;
     private static final String C64_FILE_EXTENSION = "c64";
     private static final int C128_PROGRAM_START_ADDRESS = 7169;
@@ -43,7 +43,9 @@ public class CommodoreTapeFile extends TapeFile {
     public static final int NO_LOAD_ADDRESS = -1;
     private boolean errorInFile;
 
-    public CommodoreTapeFile(String defaultExtension) { }
+    public CommodoreTapeFile(String defaultExtension, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+    }
 
     public void addBlock(CommodoreFileBlock block) {
         blocks.add(block);

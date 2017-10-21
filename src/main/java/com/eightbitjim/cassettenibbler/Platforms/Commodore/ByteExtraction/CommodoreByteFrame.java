@@ -32,7 +32,7 @@ public class CommodoreByteFrame {
     private static final int ZERO_BIT = 0;
     private static final int INVALID_BIT = -1;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
     char [] pulses;
     long [] pulseLengthInNanoSeconds;
@@ -50,7 +50,8 @@ public class CommodoreByteFrame {
 
     int numberOfPulses;
 
-    public CommodoreByteFrame() {
+    public CommodoreByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         pulses = new char[PULSES_IN_FRAME];
         pulseLengthInNanoSeconds = new long[PULSES_IN_FRAME];
         frameLengthInNanoseconds = new long[SIZE_OF_FRAME_LENGTH_BUFFER];

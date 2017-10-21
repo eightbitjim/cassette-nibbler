@@ -36,7 +36,6 @@ public class AtariPulseExtractor implements IntervalStreamConsumer, PulseStreamP
     private static final char SPACE_PULSE = PulseStreamConsumer.MEDIUM_PULSE;
     private static final char MARK_PULSE = PulseStreamConsumer.SHORT_PULSE;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
     private List<PulseStreamConsumer> consumers;
     private int currentTransitionLengthInMicroseconds;
     private int lastInterval;

@@ -27,17 +27,28 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
 
 public class AppleII extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    ApplePulseExtractor pulseExtractor = new ApplePulseExtractor();
-    AppleFileStateMachine fileExtractor = new AppleFileStateMachine();
+    LowPass lowPass;
+    HighPass highPass;
+    ZeroCrossingIntervalExtractor intervalExtractor;
+    ApplePulseExtractor pulseExtractor;
+    AppleFileStateMachine fileExtractor;
 
     public AppleII() {
         super();
 
         name = "apple2";
         description = "Apple II computer";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        lowPass = new LowPass(4800, channelName);
+        highPass = new HighPass(200, channelName);
+        intervalExtractor = new ZeroCrossingIntervalExtractor();
+        pulseExtractor = new ApplePulseExtractor(channelName);
+        fileExtractor = new AppleFileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

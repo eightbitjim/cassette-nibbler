@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FileCombinerWithThreashold implements FileStreamConsumer, FileStreamProvider {
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
     private double asciiThreashold = 0.15;
     private int scoreThreashold = 150;
@@ -38,7 +38,8 @@ public class FileCombinerWithThreashold implements FileStreamConsumer, FileStrea
     private RecognitionLibrary recognitionLibrary;
     List<FileStreamConsumer> consumers = new LinkedList<>();
 
-    public FileCombinerWithThreashold(RecognitionLibrary recognitionLibrary) {
+    public FileCombinerWithThreashold(RecognitionLibrary recognitionLibrary, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         this.recognitionLibrary = recognitionLibrary;
     }
 

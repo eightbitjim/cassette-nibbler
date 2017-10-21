@@ -33,8 +33,9 @@ public class OricFileStateMachine {
     private static final int MAXIMUM_ERRORS_IN_A_ROW = 5;
     private int errorsInARow;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+    private transient String channelName;
 
     private OricByteFrame byteFrame;
     private OricLeaderRecogniser leaderRecogniser;
@@ -49,8 +50,10 @@ public class OricFileStateMachine {
     private boolean currentFileReadyToReturn;
     private OricTapeFile.FileType fileType;
 
-    public OricFileStateMachine(OricTapeFile.FileType fileType) {
-        byteFrame = new OricByteFrame();
+    public OricFileStateMachine(OricTapeFile.FileType fileType, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
+        byteFrame = new OricByteFrame(channelName);
         leaderRecogniser = new OricLeaderRecogniser();
         switchToState(State.WAITING_FOR_SYNC);
         currentFileReadyToReturn = false;
@@ -70,7 +73,7 @@ public class OricFileStateMachine {
     }
 
     private void prepareFile() {
-        currentFile = new OricTapeFile(fileType);
+        currentFile = new OricTapeFile(fileType, channelName);
     }
 
     public TapeFile pushPulse(char pulse, long currentTimeIndex) {

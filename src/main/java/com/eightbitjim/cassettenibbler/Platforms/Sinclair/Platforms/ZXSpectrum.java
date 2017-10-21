@@ -27,17 +27,22 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossi
 
 public class ZXSpectrum extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    SpectrumPulseExtractor pulseExtractor = new SpectrumPulseExtractor();
-    SpectrumFileStateMachine fileExtractor = new SpectrumFileStateMachine();
-
     public ZXSpectrum() {
         super();
 
         name = "spectrum";
         description = "Sinclair ZX Spectrum, all varieties";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        SpectrumPulseExtractor pulseExtractor = new SpectrumPulseExtractor(channelName);
+        SpectrumFileStateMachine fileExtractor = new SpectrumFileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

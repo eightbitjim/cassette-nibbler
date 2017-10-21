@@ -37,7 +37,7 @@ public class AtariByteFrame {
     private int currentBitNumber;
     private boolean error;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private long currentTimeIndex;
     private char currentPulse;
     private int shortCyclesInARow;
@@ -46,7 +46,8 @@ public class AtariByteFrame {
     private int pulsesSinceLastByte;
     private static final int maximumPulsesSinceByte = 20;
 
-    public AtariByteFrame() {
+    public AtariByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

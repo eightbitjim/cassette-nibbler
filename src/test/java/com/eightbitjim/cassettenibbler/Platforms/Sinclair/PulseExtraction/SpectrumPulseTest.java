@@ -33,12 +33,14 @@ public class SpectrumPulseTest implements PulseStreamConsumer {
     private ZeroCrossingIntervalExtractor intervalExtractor;
     private StringBuilder resultString;
 
+    private String channelName = "channel";
+
     private static final String PATH_TO_TEST_FILES = "src/test/testFiles/";
     private static final String SHORT_PULSE_FILENAME = PATH_TO_TEST_FILES + "spectrumPulses.wav";
 
     @Before
     public void individualSetup() {
-        pulseExtractor = new SpectrumPulseExtractor();
+        pulseExtractor = new SpectrumPulseExtractor(channelName);
         intervalExtractor = new ZeroCrossingIntervalExtractor();
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(this);

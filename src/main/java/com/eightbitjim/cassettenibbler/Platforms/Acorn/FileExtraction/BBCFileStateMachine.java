@@ -37,7 +37,7 @@ public class BBCFileStateMachine {
     private static final int LAST_BLOCK = 128;
     private State state;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private long currentTimeIndex;
     private char currentPulse;
     private int currentByte;
@@ -49,13 +49,15 @@ public class BBCFileStateMachine {
     private BBCTapeFile currentFile;
     private boolean currentFileIsReadyToReturn;
     private FileBuilder fileBuilder;
-
+    private String channelName;
     private static final int SYNC_BYTE_VALUE = 0x2a;
 
-    public BBCFileStateMachine(boolean is1200BaudNot300) {
+    public BBCFileStateMachine(boolean is1200BaudNot300, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
 	    currentFileIsReadyToReturn = false;
-        acornByte = new AcornByte(is1200BaudNot300 ? AcornByte.Baud.BAUD_1200 : AcornByte.Baud.BAUD_300);
-        fileBuilder = new FileBuilder();
+        acornByte = new AcornByte(is1200BaudNot300 ? AcornByte.Baud.BAUD_1200 : AcornByte.Baud.BAUD_300, channelName);
+        fileBuilder = new FileBuilder(channelName);
         if (!is1200BaudNot300)
             MINIMUM_LEADER_LENGTH *= 4;
 
@@ -65,7 +67,7 @@ public class BBCFileStateMachine {
     private void reset() {
         state = State.WAITING_FOR_HEADER_LEADER;
         acornByte.reset();
-        block = new BBCFileBlock();
+        block = new BBCFileBlock(channelName);
         numberOfShortPulsesInARow = 0;
         currentLeaderIsValid = false;
         if (currentFile != null)

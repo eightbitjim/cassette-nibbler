@@ -26,15 +26,20 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossi
 public class Pet extends Platform {
     private static final String C64_DEFAULT_FILE_EXTENSION = "c64c128vic20pet";
 
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
-    CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION);
-
     public Pet() {
         super();
 
         name = "pet";
         description = "Commodore PET";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
+        CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION, channelName);
 
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);

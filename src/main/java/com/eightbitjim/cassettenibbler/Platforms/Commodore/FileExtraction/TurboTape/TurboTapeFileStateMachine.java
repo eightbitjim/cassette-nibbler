@@ -30,7 +30,7 @@ public class TurboTapeFileStateMachine {
     private int syncBytesInARow;
 
     private static final int SYNC_VALUES_IN_A_ROW_NEEDED = 10;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
     private TurboTapeByteFrame byteFrame;
@@ -46,8 +46,9 @@ public class TurboTapeFileStateMachine {
     private boolean currentFileReadyToReturn;
     private int nextStartByte;
 
-    public TurboTapeFileStateMachine() {
-        byteFrame = new TurboTapeByteFrame();
+    public TurboTapeFileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        byteFrame = new TurboTapeByteFrame(channelName);
         leaderRecogniser = new TurboTapeLeaderRecogniser();
         switchToState(State.WAITING_FOR_SYNC);
         currentFileReadyToReturn = false;

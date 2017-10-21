@@ -27,18 +27,24 @@ import com.eightbitjim.cassettenibbler.Platforms.Oric.FileExtraction.OricOneFile
 import com.eightbitjim.cassettenibbler.Platforms.Oric.PulseExtraction.OricPulseExtractor;
 
 public class Oric1 extends Platform {
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    Amplify inverter = new Amplify(-1.0);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    OricPulseExtractor pulseExtractor = new OricPulseExtractor();
-    OricOneFileExtractor fileExtractor = new OricOneFileExtractor();
 
     public Oric1() {
         super();
 
         name = "oric1";
         description = "Tangerine Computer Systems Oric 1";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        Amplify inverter = new Amplify(-1.0);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        OricPulseExtractor pulseExtractor = new OricPulseExtractor();
+        OricOneFileExtractor fileExtractor = new OricOneFileExtractor(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(inverter);

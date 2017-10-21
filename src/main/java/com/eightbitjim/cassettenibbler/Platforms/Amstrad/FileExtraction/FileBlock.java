@@ -27,7 +27,9 @@ import java.util.List;
 public class FileBlock {
     public enum Type { HEADER, DATA, UNKNOWN }
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
+    private transient String channelName;
+
     List<FileSubsection> subSections;
     private transient FileSubsection currentSubsection;
     private Type blockType;
@@ -35,18 +37,20 @@ public class FileBlock {
     private boolean hasStructuralErrors;
 
 
-    public FileBlock(int expectedNumberOfSubsections) {
+    public FileBlock(int expectedNumberOfSubsections, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         logging.writeFileParsingInformation("New tape block, expecting " + expectedNumberOfSubsections + " subsections.");
         subSections = new LinkedList<>();
         this.expectedNumberOfSubsections = expectedNumberOfSubsections;
         blockType = Type.UNKNOWN;
     }
 
-    public static FileBlock getDummyDataBlock() {
+    public static FileBlock getDummyDataBlock(String channelName) {
         int dataSubsectionsInBlock = 0x8;
         int fullDataSubsectionSizeInBytes = 0x0100;
 
-        FileBlock block = new FileBlock(dataSubsectionsInBlock);
+        FileBlock block = new FileBlock(dataSubsectionsInBlock, channelName);
         for (int i = 0; i < fullDataSubsectionSizeInBytes * dataSubsectionsInBlock; i++)
             block.addByte((byte)0);
 

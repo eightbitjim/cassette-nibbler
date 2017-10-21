@@ -63,11 +63,14 @@ public class AppleFileStateMachine implements PulseStreamConsumer, FileStreamPro
 
     private long currentTimeIndex;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
+    private transient String channelName;
 
     private boolean leaderIsCurrentlyValid;
 
-    public AppleFileStateMachine() {
+    public AppleFileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         fileStreamConsumers = new LinkedList<>();
         pulseStreamConsumers = new LinkedList<>();
         state = State.WAITING_FOR_HEADER_LEADER;
@@ -206,12 +209,12 @@ public class AppleFileStateMachine implements PulseStreamConsumer, FileStreamPro
     }
 
     private void resetHeaderBuffer() {
-        header = new AppleFileBlock();
+        header = new AppleFileBlock(channelName);
         numberOfByteErrorsInARow = 0;
     }
 
     private void resetDataBuffer() {
-        data = new AppleFileBlock();
+        data = new AppleFileBlock(channelName);
         numberOfByteErrorsInARow = 0;
     }
 
@@ -292,7 +295,7 @@ public class AppleFileStateMachine implements PulseStreamConsumer, FileStreamPro
             return;
         }
 
-        currentFile = new AppleTapeFile();
+        currentFile = new AppleTapeFile(channelName);
         if (!validChecksum) {
             logging.writeFileParsingInformation("Invalid header checksum, but options set to allow.");
             currentFile.isInError();

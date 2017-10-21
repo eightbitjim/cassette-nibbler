@@ -31,12 +31,16 @@ public class CommodoreFileBuilder {
 
     private static final int DEFAULT_START_ADDRESS = 2049;
 
-    TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    TapeExtractionLogging logging;
+    private String channelName;
+
     private String defaultFileExtension;
 
-    public CommodoreFileBuilder(String defaultFileExtension) {
+    public CommodoreFileBuilder(String defaultFileExtension, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         this.defaultFileExtension = defaultFileExtension;
-        currentFile = new CommodoreTapeFile(defaultFileExtension);
+        currentFile = new CommodoreTapeFile(defaultFileExtension, channelName);
     }
 
     public void addBlock(CommodoreFileBlock block) {
@@ -116,7 +120,7 @@ public class CommodoreFileBuilder {
     private void pushCurrentFileToOutputQueue() {
         logging.writeFileParsingInformation("Pushing file of type " + currentFile.getType() + " to output queue.");
         filesToReturn.add(currentFile);
-        currentFile = new CommodoreTapeFile(defaultFileExtension);
+        currentFile = new CommodoreTapeFile(defaultFileExtension, channelName);
     }
 
     private void pushOutFileIfObviouslyComplete() {
@@ -167,7 +171,7 @@ public class CommodoreFileBuilder {
         if (currentFile.getType() != CommodoreTapeFile.Type.UNKNOWN)
             pushCurrentFileToOutputQueue();
 
-        currentFile = new CommodoreTapeFile(defaultFileExtension);
+        currentFile = new CommodoreTapeFile(defaultFileExtension, channelName);
     }
 
     public CommodoreTapeFile getFile() {
@@ -180,7 +184,7 @@ public class CommodoreFileBuilder {
     private void addDummyProgramHeader(int dataLength) {
         logging.writeFileParsingInformation("PREPARING DUMMY PROGRAM FILE HEADER AND ADDING TO FILE");
 
-        CommodoreFileBlock block = new CommodoreFileBlock();
+        CommodoreFileBlock block = new CommodoreFileBlock(channelName);
         block.dataPointer = CommodoreFileBlock.HEADER_DATA_LENGTH;
         block.setFilenameBuffer(block.makeFilenameBuffer("HEADLESS_FILE"));
         block.setStartAddress(DEFAULT_START_ADDRESS);
@@ -192,7 +196,7 @@ public class CommodoreFileBuilder {
 
     private void addDummySequentialFileHeader() {
         logging.writeFileParsingInformation("PREPARING DUMMY SEQUENTIAL FILE HEADER AND ADDING TO FILE");
-        CommodoreFileBlock block = new CommodoreFileBlock();
+        CommodoreFileBlock block = new CommodoreFileBlock(channelName);
         block.prepareDummySequentialFileHeader(0);
         block.setFilenameBuffer(block.makeFilenameBuffer("HEADLESS_SEQ_FILE"));
         currentFile.addBlock(block);

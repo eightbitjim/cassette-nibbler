@@ -24,9 +24,10 @@ import java.util.LinkedList;
 
 public class AppleFileBlock {
     private LinkedList<Byte> rawData;
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
 
-    public AppleFileBlock() {
+    public AppleFileBlock(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         rawData = new LinkedList<>();
     }
 

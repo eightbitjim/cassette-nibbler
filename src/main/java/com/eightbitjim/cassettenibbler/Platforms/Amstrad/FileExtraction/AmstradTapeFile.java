@@ -31,11 +31,17 @@ public class AmstradTapeFile extends TapeFile {
 
     private List<FileBlock> blocks = new LinkedList<>();
     private transient HeaderSubsection lastHeaderSubsection;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
+    private transient String channelName;
 
     private static final int BLOCK_SUBSECTION_LENGTH = 0x100;
     private static final int SUBSECTIONS_IN_HEADER = 0x1;
     private static final int MAXIMUM_NUMBER_OF_BYTES_IN_DATA_BLOCK = 0x0800;
+
+    public AmstradTapeFile(String channelName) {
+        this.channelName = channelName;
+        logging = TapeExtractionLogging.getInstance(channelName);
+    }
 
     public void addBlock(FileBlock block) {
         checkBlockIsExpectedType(block);
@@ -99,7 +105,7 @@ public class AmstradTapeFile extends TapeFile {
 
     private void addDummyDataBlock() {
         logging.writeFileParsingInformation("Adding dummy data block so header block can be parsed");
-        blocks.add(FileBlock.getDummyDataBlock());
+        blocks.add(FileBlock.getDummyDataBlock(channelName));
     }
 
     private void addDummyHeaderBlockForDataBlock(FileBlock block) {
@@ -217,7 +223,7 @@ public class AmstradTapeFile extends TapeFile {
     }
 
     private byte [] getBasicProgram() {
-        String basicListing = new AmstradBasic(getRawData()).toString();
+        String basicListing = new AmstradBasic(getRawData(), channelName).toString();
         return basicListing.getBytes();
     }
 

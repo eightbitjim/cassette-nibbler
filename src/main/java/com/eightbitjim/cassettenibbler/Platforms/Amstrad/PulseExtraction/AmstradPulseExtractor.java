@@ -32,7 +32,7 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
     private static final int ZERO_T_STATES = 1220;
     private static final int ONE_T_STATES = 2350;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private AmstradPilotToneDetection pilotToneDetection;
     private List<PulseStreamConsumer> consumers;
     private double intervalShiftMultiplier;
@@ -41,7 +41,8 @@ public class AmstradPulseExtractor implements IntervalStreamConsumer, PulseStrea
     private boolean secondTStateInWave;
     private long currentTimeIndex;
 
-    public AmstradPulseExtractor() {
+    public AmstradPulseExtractor(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         consumers = new LinkedList<>();
         pilotToneDetection = new AmstradPilotToneDetection();
         currentTimeIndex = 0;

@@ -54,10 +54,13 @@ public class TapeBlock {
     private static final int MACHINE_CODE_TYPE_VALUE = 0x02;
 
     private static final int BLOCK_LENGTH_BYTE_POSITION = 1;
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+    private String channelName;
 
-    public TapeBlock() {
+    public TapeBlock(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
+        this.channelName = channelName;
         rawBlockBytes = new ArrayList<>();
         bytesReceived = 0;
         errors = false;
@@ -285,8 +288,8 @@ public class TapeBlock {
         return oneByteValueAt(ASCII_FLAG_POSITION) != 0;
     }
 
-    public static TapeBlock createDummyNamefile() {
-        TapeBlock namefile = new TapeBlock();
+    public static TapeBlock createDummyNamefile(String channelName) {
+        TapeBlock namefile = new TapeBlock(channelName);
         namefile.addByte((byte)DATA_BLOCK_VALUE);
         namefile.addByte((byte)15);
         namefile.addByte((byte)'h');

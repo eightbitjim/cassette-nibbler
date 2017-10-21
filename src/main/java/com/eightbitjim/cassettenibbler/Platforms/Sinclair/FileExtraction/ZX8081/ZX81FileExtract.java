@@ -54,10 +54,11 @@ public class ZX81FileExtract implements FileStreamProvider, ByteStreamConsumer {
     private int nextByte;
     private List<FileStreamConsumer> consumers;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private boolean errorDetectedSinceStartingThisFile;
 
-    public ZX81FileExtract() {
+    public ZX81FileExtract(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         consumers = new LinkedList<>();
         fileData = new LinkedList<>();
         filenameBuffer = new LinkedList<>();

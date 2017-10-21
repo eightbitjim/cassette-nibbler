@@ -27,16 +27,21 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.HighPass;
 public class C16 extends Platform {
     private static final String C16PLUS4_DEFAULT_FILE_EXTENSION = "c16plus4";
 
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    Commodore16Plus4PulseExtractor pulseExtractor = new Commodore16Plus4PulseExtractor();
-    CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C16PLUS4_DEFAULT_FILE_EXTENSION);
-
     public C16() {
         super();
 
         name = "commodore16+4";
         description = "Commodore 16, Commodore +4";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        Commodore16Plus4PulseExtractor pulseExtractor = new Commodore16Plus4PulseExtractor();
+        CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C16PLUS4_DEFAULT_FILE_EXTENSION, channelName);
 
         highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);

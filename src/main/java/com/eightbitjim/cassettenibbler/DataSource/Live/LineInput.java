@@ -38,9 +38,10 @@ public class LineInput implements SampleStreamProvider {
     private TargetDataLine line;
     private Sample sample;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
 
-    public LineInput() throws DataSourceNotAvailableException {
+    public LineInput(String channelName) throws DataSourceNotAvailableException {
+        logging = TapeExtractionLogging.getInstance(channelName);
         consumers = new LinkedList<>();
         sample = new Sample();
         lineInputFormat = new AudioFormat(sampleRateInHz, 8, 1, false, false);

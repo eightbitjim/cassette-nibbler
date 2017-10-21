@@ -52,9 +52,11 @@ public class ExtractFile {
 
     private OutputDestination outputDestination = OutputDestination.FILES;
     private TapeFile.FormatType outputFileType = null;
+    private TapeExtractionOptions.LoggingMode loggingMode = TapeExtractionOptions.LoggingMode.NONE;
 
     private Collection<Platform> availablePlatforms = new LinkedList<>();
     private String outputDirectory = ".";
+    private String LOG_FILE_DEFAULT_PREFIX = "log_";
 
     private InputType inputType;
     private InputSource inputSource;
@@ -85,6 +87,8 @@ public class ExtractFile {
     private Directory directory;
     private transient TapeExtractionOptions options;
 
+    private static final String defaultChannelName = "preProcessing";
+
     public static final void main(String args[]) {
         ExtractFile obj = new ExtractFile();
         try {
@@ -106,12 +110,13 @@ public class ExtractFile {
 
     private void setUpOptions() {
         options = TapeExtractionOptions.getInstance();
-        options.setLogging(TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS);
+        options.setLogging(TapeExtractionOptions.LoggingMode.NONE, null);
         options.setAttemptToRecoverCorruptedFiles(true).setAllowIncorrectFrameChecksums(true).setAllowIncorrectFileChecksums(true);
     }
 
     private void runWithArguments(String [] args) throws IOException, PlatformAccessError, UnsupportedAudioFileException {
         parseArguments(args);
+
         if (error)
             System.exit(10);
 
@@ -120,9 +125,11 @@ public class ExtractFile {
             return;
         }
 
+        configureLogOutput();
         preparePlatformList();
         preparePlatformByteScrapingOutputFiles();
         printIntroductionText();
+        initialiseChosenPlatforms();
         configurePlatforms();
         linkDestinationToPlatforms();
 
@@ -141,6 +148,13 @@ public class ExtractFile {
         }
 
         printFinalOutput();
+    }
+
+    private void initialiseChosenPlatforms() {
+        String platformNamePostfix = "";
+        for (Platform platform : chosenPlatforms) {
+            platform.initialise(platformNamePostfix);
+        }
     }
 
     private void printFinalOutput() {
@@ -191,7 +205,7 @@ public class ExtractFile {
 
     private void extractFromInputStream() throws IOException, PlatformAccessError, UnsupportedAudioFileException {
         if (inputType == InputType.WAV) {
-            AudioInput wavFile = new AudioInput(inputStream);
+            AudioInput wavFile = new AudioInput(inputStream, defaultChannelName);
             sampleSource = wavFile;
             configureSampleStreamInput();
         } else if (inputType == InputType.PULSES) {
@@ -215,13 +229,13 @@ public class ExtractFile {
         }
 
         if (lowPassFilter) {
-            LowPass lowPassFilter = new LowPass(lowPassFilterCutoff);
+            LowPass lowPassFilter = new LowPass(lowPassFilterCutoff, defaultChannelName);
             connector.registerSampleStreamConsumer(lowPassFilter);
             connector = lowPassFilter;
         }
 
         if (highPassFilter) {
-            HighPass highPassFilter = new HighPass(highPassFilterCutoff);
+            HighPass highPassFilter = new HighPass(highPassFilterCutoff, defaultChannelName);
             connector.registerSampleStreamConsumer(highPassFilter);
             connector = highPassFilter;
         }
@@ -230,16 +244,14 @@ public class ExtractFile {
         pulseSource = new PulseSourceFromInputStream(inputStream);
 
         if (soundOutput != null) {
-            AudioFileOutput audioFileOutput = new AudioFileOutput(soundOutput);
+            AudioFileOutput audioFileOutput = new AudioFileOutput(soundOutput, defaultChannelName);
             connector.registerSampleStreamConsumer(audioFileOutput);
         }
     }
 
     private void configureProgessIndicator() {
-        if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS) {
-            progressIndicator = new CommandLineProgressIndicator("Progress");
-            addFileStreamConsomerToPlatforms(progressIndicator);
-        }
+        progressIndicator = new CommandLineProgressIndicator("Progress");
+        addFileStreamConsomerToPlatforms(progressIndicator);
     }
 
     private void addFileStreamConsomerToPlatforms(FileStreamConsumer consumer) {
@@ -253,7 +265,7 @@ public class ExtractFile {
     }
 
     private void printIntroductionText() {
-        if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS) {
+        if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE) {
             printTitle();
             printOptions();
             printPlatformList();
@@ -289,7 +301,7 @@ public class ExtractFile {
     }
 
     private void configurePlatforms() {
-        for (Platform platform : availablePlatforms) {
+        for (Platform platform : chosenPlatforms) {
             platform.setConfigurationString(configurationString);
         }
     }
@@ -335,7 +347,7 @@ public class ExtractFile {
         ByteStreamProvider provider = platform.getByteOutputPoint();
         ByteStreamFileOutput output = null;
         try {
-            output = new ByteStreamFileOutput(outputDirectory, byteScrapingFilenameFor(platform));
+            output = new ByteStreamFileOutput(outputDirectory, byteScrapingFilenameFor(platform), defaultChannelName);
             provider.registerByteStreamConsumer(output);
         } catch (FileNotFoundException e) {
             System.err.println(e.toString());
@@ -357,6 +369,18 @@ public class ExtractFile {
             connector.registerSampleStreamConsumer(platform.getWaveformInputPoint());
     }
 
+    private void configureLogOutput() {
+        switch (outputDestination) {
+            case FILES:
+                options.setLogging(loggingMode, getFilePath(outputDirectory, LOG_FILE_DEFAULT_PREFIX));
+                break;
+
+            default:
+                options.setLogging(loggingMode, null);
+                break;
+        }
+    }
+
     private void linkDestinationToPlatforms() throws PlatformAccessError {
         FileStreamConsumer fileStreamDataSink;
         boolean allowFilesWithErrors = options.getAttemptToRecoverCorruptedFiles() ||
@@ -368,20 +392,33 @@ public class ExtractFile {
             case FILES:
                 fileStreamDataSink = new FileOutputFileWriter(outputDirectory, allowFilesWithErrors)
                         .setOutputFileType(outputFileType);
+
                 break;
 
             case STANDARD_OUT:
                 fileStreamDataSink = new StreamOutputFileWriter(System.out, allowFilesWithErrors)
                         .setOutputFileType(outputFileType);
+
                 break;
 
             case DIRECTORY_LISTING:
                 directory = new Directory();
                 fileStreamDataSink = directory;
+
                 break;
         }
 
         addFileStreamConsomerToPlatforms(fileStreamDataSink);
+    }
+
+    private String getFilePath(String directory, String filename) {
+        StringBuilder pathToReturn = new StringBuilder();
+        pathToReturn.append(directory);
+        if (!directory.endsWith("/") && !directory.endsWith("\\"))
+            pathToReturn.append("/");
+
+        pathToReturn.append(filename);
+        return pathToReturn.toString();
     }
 
     private void parseArguments(String [] args) {
@@ -440,16 +477,16 @@ public class ExtractFile {
                         options.setAttemptToRecoverCorruptedFiles(false).setAllowIncorrectFrameChecksums(false).setAllowIncorrectFileChecksums(false);
                         break;
                     case "-logging=verbose":
-                        options.setLogging(TapeExtractionOptions.LoggingMode.VERBOSE);
+                        loggingMode = TapeExtractionOptions.LoggingMode.VERBOSE;
                         break;
                     case "-logging=minimal":
-                        options.setLogging(TapeExtractionOptions.LoggingMode.MINIMAL);
+                        loggingMode = TapeExtractionOptions.LoggingMode.MINIMAL;
                         break;
                     case "-logging=none":
-                        options.setLogging(TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS);
+                        loggingMode = TapeExtractionOptions.LoggingMode.NONE;
                         break;
                     case "-logging=parsing":
-                        options.setLogging(TapeExtractionOptions.LoggingMode.FILE_PARSING_PULSES);
+                        loggingMode = TapeExtractionOptions.LoggingMode.FILE_PARSING_PULSES;
                         break;
                     default:
                         if (args[i].startsWith("-config=")) {
@@ -537,7 +574,7 @@ public class ExtractFile {
     private void displayHelp() {
         System.err.println("cassette-nibbler [options] [inputFile1] [inputFile2] ...");
         System.err.println();
-        System.err.println("Extracts from wav data to stdout. Input from one or more specified files, or use -stdin option.\nOptions:\n");
+        System.err.println("Extracts from wav data to files or stdout. Input from one or more specified files, or use -stdin option.\nOptions:\n");
         System.err.println("-help: displays this message");
         System.err.println("-stdin: use input from standard in instead of file input");
         System.err.println("-destination=<type>, selects what to output. One of:");
@@ -565,14 +602,11 @@ public class ExtractFile {
         System.err.println("-volume=<1.0, etc>: amount to multiply incoming signal by");
         System.err.println("-intact-files-only: only recover files that appear complete and with no errors");
         System.err.println("-sound-output=<filename>: output sample data after filters to WAV audio file");
-        System.err.println("-logging=<logging mode>, the amount of logging to send to stderr");
-        System.err.println("   (Recommend redirecting stderr to a file for verbose logging)");
-        System.err.println("   none: no logging");
+        System.err.println("-logging=<logging mode>, the amount of logging to send to platform specific log files");
+        System.err.println("   none: no logging (default)");
         System.err.println("   minimal: errors only and major pieces of information");
         System.err.println("   verbose: lots of detail (very long)");
-        System.err.println("   parsing: outputs pulses that can be edited and loaded back in via -input=pulses. You need");
-        System.err.println("            to specify one platform with -platform= otherwise different platforms will overlap.");
-        System.err.println("            Redirect standard error to a file to save the pulses in a text file.");
+        System.err.println("   parsing: outputs pulses that can be edited and loaded back in via -input=pulses");
         System.err.println("-input=pulses: reads a pulse file instead of an audio file. The pulse file can be");
         System.err.println("               output with -logging=parsing");
     }
@@ -634,7 +668,7 @@ public class ExtractFile {
 
     private void runThroughSamples() throws PlatformAccessError {
         try {
-            LineInput lineInput = new LineInput();
+            LineInput lineInput = new LineInput(defaultChannelName);
             sampleSource = lineInput;
             configureSampleStreamInput();
             linkSourceToPlatforms();

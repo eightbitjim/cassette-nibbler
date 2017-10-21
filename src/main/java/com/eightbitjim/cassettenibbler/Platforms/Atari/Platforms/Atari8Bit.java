@@ -29,17 +29,22 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
 
 public class Atari8Bit extends Platform {
 
-    LowPass lowPass = new LowPass(6000);
-    HighPass highPass = new HighPass(3800);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    AtariPulseExtractor pulseExtractor = new AtariPulseExtractor();
-    AtariFileStateMachine fileExtractor = new AtariFileStateMachine();
-
     public Atari8Bit() {
         super();
 
         name = "atari";
         description = "Atari 400/800/XL";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(6000, channelName);
+        HighPass highPass = new HighPass(3800, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        AtariPulseExtractor pulseExtractor = new AtariPulseExtractor();
+        AtariFileStateMachine fileExtractor = new AtariFileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

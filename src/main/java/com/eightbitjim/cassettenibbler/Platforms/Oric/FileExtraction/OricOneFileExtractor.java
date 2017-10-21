@@ -36,8 +36,8 @@ public class OricOneFileExtractor implements FileStreamProvider, PulseStreamCons
     private TapeFile currentFile;
     protected OricFileStateMachine stateMachine;
 
-    public OricOneFileExtractor() {
-        stateMachine = new OricFileStateMachine(OricTapeFile.FileType.ORIC_ONE);
+    public OricOneFileExtractor(String channelName) {
+        stateMachine = new OricFileStateMachine(OricTapeFile.FileType.ORIC_ONE, channelName);
     }
 
     @Override

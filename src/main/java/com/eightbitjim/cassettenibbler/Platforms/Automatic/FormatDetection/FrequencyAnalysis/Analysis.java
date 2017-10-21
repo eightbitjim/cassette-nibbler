@@ -32,9 +32,10 @@ public class Analysis {
 
     protected static final int DONT_COUNT_THIS_VALUE = -1;
 
-    TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    TapeExtractionLogging logging;
 
-    public Analysis(String name) {
+    public Analysis(String name, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         numberOfValuesToCount = 256;
         reset();
         this.name = name;

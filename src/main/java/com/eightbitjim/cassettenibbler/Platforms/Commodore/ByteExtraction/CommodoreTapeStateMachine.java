@@ -38,15 +38,16 @@ class CommodoreTapeStateMachine {
     private long pulsesSinceLastFrame;
 
     private CommodoreByteFrame frame;
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
-    public CommodoreTapeStateMachine() {
+    public CommodoreTapeStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         state = FRAME_ERROR;
         pulseBuffer = new char[SIZE_OF_PULSE_BUFFER];
         pulseLengthBuffer = new long[SIZE_OF_PULSE_BUFFER];
         bufferPointer = SIZE_OF_PULSE_BUFFER - 1;
         pulsesSinceLastFrame = 0;
-        frame = new CommodoreByteFrame();
+        frame = new CommodoreByteFrame(channelName);
     }
 
     public void addPulse(char pulseType, long pulseLengthInNanoSeconds) {

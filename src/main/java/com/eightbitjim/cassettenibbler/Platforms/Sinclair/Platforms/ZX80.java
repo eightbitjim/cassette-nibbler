@@ -29,20 +29,12 @@ import com.eightbitjim.cassettenibbler.Platforms.Sinclair.FileExtraction.ZX8081.
 
 public class ZX80 extends Platform {
 
-
     Directory fileCombiner = new Directory();
     SampleStreamSplitter splitter = new SampleStreamSplitter();
 
     @Override
-    public boolean hasHighProcessingOverhead() {
-        return true;
-    }
-
-    public ZX80() {
-        super();
-
-        name = "zx80";
-        description = "Sinclair ZX80";
+    public void initialise(String channelName) {
+        channelName = name + channelName;
 
         double minVolume = -30.0;
         double maxVolume = 30.0;
@@ -52,8 +44,8 @@ public class ZX80 extends Platform {
             Amplify amplifier = new Amplify(volume);
             ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
             ZX81PulseExtractor pulseExtractor = new ZX81PulseExtractor();
-            ZX81ByteReader byteExtractor = new ZX81ByteReader();
-            ZX81FileExtract fileExtractor = new ZX81FileExtract();
+            ZX81ByteReader byteExtractor = new ZX81ByteReader(channelName);
+            ZX81FileExtract fileExtractor = new ZX81FileExtract(channelName);
 
             splitter.registerSampleStreamConsumer(amplifier);
             amplifier.registerSampleStreamConsumer(intervalExtractor);
@@ -76,5 +68,17 @@ public class ZX80 extends Platform {
         fileOutput = fileCombiner;
 
         registerTypes();
+    }
+
+    @Override
+    public boolean hasHighProcessingOverhead() {
+        return true;
+    }
+
+    public ZX80() {
+        super();
+
+        name = "zx80";
+        description = "Sinclair ZX80";
     }
 }

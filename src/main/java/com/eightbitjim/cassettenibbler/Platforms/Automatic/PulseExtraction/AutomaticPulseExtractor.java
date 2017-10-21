@@ -51,9 +51,10 @@ public class AutomaticPulseExtractor implements IntervalStreamConsumer, PulseStr
     private int numberOfPulseTypes;
     private long interval;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
 
-    public AutomaticPulseExtractor(int numberOfPulseTypes) {
+    public AutomaticPulseExtractor(int numberOfPulseTypes, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         this.numberOfPulseTypes = numberOfPulseTypes;
         if (this.numberOfPulseTypes < 2)
             this.numberOfPulseTypes = 2;

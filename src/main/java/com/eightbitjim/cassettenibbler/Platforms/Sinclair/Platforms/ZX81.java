@@ -35,15 +35,8 @@ public class ZX81 extends Platform {
     SampleStreamSplitter splitter = new SampleStreamSplitter();
 
     @Override
-    public boolean hasHighProcessingOverhead() {
-        return true;
-    }
-
-    public ZX81() {
-        super();
-
-        name = "zx81";
-        description = "Sinclair ZX81, 1K and 16K";
+    public void initialise(String channelName) {
+        channelName = name + channelName;
 
         double minVolume = -10.0;
         double maxVolume = 10.0;
@@ -53,8 +46,8 @@ public class ZX81 extends Platform {
             Amplify amplifier = new Amplify(volume);
             ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
             ZX81PulseExtractor pulseExtractor = new ZX81PulseExtractor();
-            ZX81ByteReader byteExtractor = new ZX81ByteReader();
-            ZX81FileExtract fileExtractor = new ZX81FileExtract();
+            ZX81ByteReader byteExtractor = new ZX81ByteReader(channelName);
+            ZX81FileExtract fileExtractor = new ZX81FileExtract(channelName);
 
             splitter.registerSampleStreamConsumer(amplifier);
             amplifier.registerSampleStreamConsumer(intervalExtractor);
@@ -78,5 +71,17 @@ public class ZX81 extends Platform {
         fileOutput = fileCombiner;
 
         registerTypes();
+    }
+
+    @Override
+    public boolean hasHighProcessingOverhead() {
+        return true;
+    }
+
+    public ZX81() {
+        super();
+
+        name = "zx81";
+        description = "Sinclair ZX81, 1K and 16K";
     }
 }

@@ -76,11 +76,12 @@ public class SpectrumFileStateMachine implements PulseStreamConsumer, FileStream
 
     private long currentTimeIndex;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
 
     private boolean leaderIsCurrentlyValid;
 
-    public SpectrumFileStateMachine() {
+    public SpectrumFileStateMachine(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         fileStreamConsumers = new LinkedList<>();
         pulseStreamConsumers = new LinkedList<>();
         state = WAITING_FOR_HEADER_LEADER;
@@ -373,7 +374,7 @@ public class SpectrumFileStateMachine implements PulseStreamConsumer, FileStream
                 currentFile.type = "characters";
                 break;
             case 3:
-                currentFile.type = "bytes";
+                currentFile.type = "bytes." + (headerBuffer[13] + headerBuffer[14] * 256);
                 break;
             default:
                 logging.writeDataError(currentTimeIndex, "Invalid file type: " + headerBuffer[1]);

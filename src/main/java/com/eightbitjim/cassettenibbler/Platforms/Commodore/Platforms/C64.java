@@ -30,17 +30,22 @@ public class C64 extends Platform {
 
     private static final String C64_DEFAULT_FILE_EXTENSION = "c64c128vic20pet";
 
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
-    CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION);
-    CommodoreByteReader byteReader = new CommodoreByteReader();
-
     public C64() {
         super();
 
         name = "commodore";
         description = "Commodore 64, 128, VIC20, PET";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
+        CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION, channelName);
+        CommodoreByteReader byteReader = new CommodoreByteReader(channelName);
 
         highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);

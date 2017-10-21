@@ -41,10 +41,11 @@ public class MSXTapeBlock {
     private static final int ASCII_BLOCK_SIZE = 256;
     private static final int FILENAME_START_POSITION = 10;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
-    public MSXTapeBlock(BlockType type) {
+    public MSXTapeBlock(BlockType type, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         data = new ArrayList<>();
         this.type = type;
         bytesReceived = 0;

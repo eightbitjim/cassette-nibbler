@@ -27,17 +27,22 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
 
 public class TurboTape64 extends Platform {
 
-    LowPass lowPass = new LowPass(4800);
-    HighPass highPass = new HighPass(200);
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    TurboTapePulseExtractor pulseExtractor = new TurboTapePulseExtractor(false);
-    TurboTapeFileExtractor fileExtractor = new TurboTapeFileExtractor();
-
     public TurboTape64() {
         super();
 
         name = "c64-turbotape";
         description = "Commodore 64 turbo tape loader";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+
+        LowPass lowPass = new LowPass(4800, channelName);
+        HighPass highPass = new HighPass(200, channelName);
+        ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
+        TurboTapePulseExtractor pulseExtractor = new TurboTapePulseExtractor(false);
+        TurboTapeFileExtractor fileExtractor = new TurboTapeFileExtractor(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

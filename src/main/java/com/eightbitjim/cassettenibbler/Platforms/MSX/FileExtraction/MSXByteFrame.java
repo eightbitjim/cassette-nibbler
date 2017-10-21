@@ -38,7 +38,7 @@ public class MSXByteFrame {
     private int currentBitNumber;
     private boolean error;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private long currentTimeIndex;
     private char currentPulse;
     private int shortCyclesInARow;
@@ -47,7 +47,8 @@ public class MSXByteFrame {
     private int pulsesSinceLastByte;
     private static final int maximumPulsesSinceByte = 20;
 
-    public MSXByteFrame() {
+    public MSXByteFrame(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         reset();
     }
 

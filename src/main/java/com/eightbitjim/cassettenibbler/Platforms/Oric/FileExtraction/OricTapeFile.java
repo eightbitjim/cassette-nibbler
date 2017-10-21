@@ -50,10 +50,11 @@ public class OricTapeFile extends TapeFile {
     private State state;
     private int currentByte;
 
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
 
-    public OricTapeFile(FileType type) {
+    public OricTapeFile(FileType type, String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         state = State.RECEIVING_HEADER;
         headerBuffer = new byte[MAXIMUM_HEADER_BUFFER_SIZE];
         errorInFile = false;

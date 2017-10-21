@@ -34,7 +34,7 @@ public class SpectrumPulseExtractor implements IntervalStreamConsumer, PulseStre
     private static final int ZERO_T_STATES = 855;
     private static final int ONE_T_STATES = 1710;
 
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private State state;
     private SpectrumPilotToneDetection pilotToneDetection;
     private List<PulseStreamConsumer> consumers;
@@ -44,7 +44,8 @@ public class SpectrumPulseExtractor implements IntervalStreamConsumer, PulseStre
     private boolean secondTStateInWave;
     private long currentTimeIndex;
 
-    public SpectrumPulseExtractor() {
+    public SpectrumPulseExtractor(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         consumers = new LinkedList<>();
         pilotToneDetection = new SpectrumPilotToneDetection();
         currentTimeIndex = 0;

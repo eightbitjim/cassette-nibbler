@@ -18,23 +18,45 @@
 
 package com.eightbitjim.cassettenibbler;
 
-public class TapeExtractionLogging {
-    private static TapeExtractionLogging instance = null;
-    private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.TreeMap;
 
-    protected TapeExtractionLogging() {
-        // Exists only to defeat instantiation.
+public class TapeExtractionLogging {
+    private TapeExtractionOptions options = TapeExtractionOptions.getInstance();
+    private static TreeMap<String, TapeExtractionLogging> instances = new TreeMap<>();
+    private LoggingChannel channel;
+    private static final String LOG_FILENAME_SUFFIX = ".txt";
+
+    private TapeExtractionLogging(String channelName) {
+        channel = new LoggingChannel();
+        channel.name = channelName;
+
+        String filename = options.getLogBaseFilename();
+        if ((filename == null) || (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.NONE))
+            channel.stream = System.err;
+        else
+            try {
+                channel.stream = new PrintStream(new FileOutputStream(filename + channelName + LOG_FILENAME_SUFFIX));
+            } catch (FileNotFoundException e) {
+                System.err.println("Cannot open log file for output");
+                channel.stream = System.err;
+            }
     }
 
-    public static TapeExtractionLogging getInstance() {
+    public static TapeExtractionLogging getInstance(String channelName) {
+        TapeExtractionLogging instance = instances.get(channelName);
         if(instance == null) {
-            instance = new TapeExtractionLogging();
+            instance = new TapeExtractionLogging(channelName);
+            instances.put(channelName, instance);
         }
+
         return instance;
     }
 
     public void writeProgramOrEnvironmentError(long nanoseconds, String message) {
-        if (options.getLogVerbosity() != TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS)
+        if (options.getLogVerbosity() != TapeExtractionOptions.LoggingMode.NONE)
             writeLine(nanoseconds, message, true);
     }
 
@@ -49,7 +71,7 @@ public class TapeExtractionLogging {
     }
 
     public void writeDataError(long nanoseconds, String message) {
-        if (options.getLogVerbosity() != TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS)
+        if (options.getLogVerbosity() != TapeExtractionOptions.LoggingMode.NONE)
             writeLine(nanoseconds, message, true);
     }
 
@@ -64,11 +86,16 @@ public class TapeExtractionLogging {
     }
 
     private void writeString(String message) {
-        options.logWriter.print(message.toUpperCase());
+        channel.stream.print(message.toUpperCase());
     }
 
     public void writePulse(char pulseType) {
         if (options.getLogVerbosity() == TapeExtractionOptions.LoggingMode.FILE_PARSING_PULSES)
-            options.logWriter.print(pulseType);
+            channel.stream.print(pulseType);
     }
+}
+
+class LoggingChannel {
+    String name;
+    PrintStream stream;
 }

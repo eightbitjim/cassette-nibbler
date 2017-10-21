@@ -29,11 +29,12 @@ import java.util.LinkedList;
 public class AppleTapeFile extends TapeFile {
     public enum Type { INTEGER_BASIC, APPLESOFT_BASIC, APPLESOFT_SHAPE_TABLE, APPLESOFT_ARRAY, UNKNOWN}
     private Type type;
-    private TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private TapeExtractionLogging logging;
     private LinkedList <AppleFileBlock> blocks;
     private boolean atLeastOneError;
 
-    public AppleTapeFile() {
+    public AppleTapeFile(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         blocks = new LinkedList<>();
         type = Type.UNKNOWN;
         atLeastOneError = false;

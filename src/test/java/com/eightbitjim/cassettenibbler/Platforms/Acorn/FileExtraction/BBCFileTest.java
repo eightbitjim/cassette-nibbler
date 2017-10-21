@@ -45,6 +45,7 @@ public class BBCFileTest implements FileStreamConsumer {
     private List<BBCTapeFile> results;
     private LowPass lowPass;
     private HighPass highPass;
+    private String channelName = "channel";
 
     private static final String PATH_TO_TEST_FILES = "src/test/testFiles/";
     private static final String ONE_FILE_FILENAME = PATH_TO_TEST_FILES + "bbcOneFile1200.wav";
@@ -55,12 +56,12 @@ public class BBCFileTest implements FileStreamConsumer {
 
     @Before
     public void individualSetup() {
-        TapeExtractionOptions.getInstance().setLogging(TapeExtractionOptions.LoggingMode.NONE_SHOW_PROGRESS);
+        TapeExtractionOptions.getInstance().setLogging(TapeExtractionOptions.LoggingMode.NONE, null);
 
-        lowPass = new LowPass(4800);
-        highPass = new HighPass(200);
-        fileExtractor1200 = new BBCFileExtractor(true);
-        fileExtractor300 = new BBCFileExtractor(false);
+        lowPass = new LowPass(4800, channelName);
+        highPass = new HighPass(200, channelName);
+        fileExtractor1200 = new BBCFileExtractor(true, channelName);
+        fileExtractor300 = new BBCFileExtractor(false, channelName);
         pulseExtractor = new AcornPulseExtractor();
         intervalExtractor = new ZeroCrossingIntervalExtractor();
 
@@ -108,7 +109,7 @@ public class BBCFileTest implements FileStreamConsumer {
     }
 
     private void parseFile(String filename, int numberOfExpectedResults) throws Throwable {
-        AudioInput reader = new AudioInput(filename);
+        AudioInput reader = new AudioInput(filename, channelName);
         try {
             reader.registerSampleStreamConsumer(lowPass);
             pushStreamThroughSystem(reader);

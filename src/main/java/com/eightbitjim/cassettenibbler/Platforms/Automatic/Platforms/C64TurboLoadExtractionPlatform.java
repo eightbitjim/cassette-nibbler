@@ -32,18 +32,29 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class C64TurboLoadExtractionPlatform extends Platform {
-    ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
-    AutomaticPulseExtractor pulseExtractor = new AutomaticPulseExtractor(2);
-    FileCombinerWithThreashold fileExtractor = new FileCombinerWithThreashold(new C64RecognitionLibrary());
     List<EncodingScheme> schemeList;
-
     String platformSettings;
+    String channelName;
+
+    ZeroCrossingIntervalExtractor intervalExtractor;
+    AutomaticPulseExtractor pulseExtractor;
+    FileCombinerWithThreashold fileExtractor;
 
     public C64TurboLoadExtractionPlatform() {
         super();
 
         name = "c64turboload";
         description = "Analysis of pulses to automatically determine loading format, based on the assumption that it is a C64 turbo loader";
+    }
+
+    @Override
+    public void initialise(String channelName) {
+        channelName = name + channelName;
+        this.channelName = channelName;
+
+        intervalExtractor = new ZeroCrossingIntervalExtractor();
+        pulseExtractor = new AutomaticPulseExtractor(2, channelName);
+        fileExtractor = new FileCombinerWithThreashold(new C64RecognitionLibrary(), channelName);
     }
 
     @Override
@@ -62,7 +73,7 @@ public class C64TurboLoadExtractionPlatform extends Platform {
 
         for (EncodingScheme scheme : schemeList) {
             for (int skipPulses = 0; skipPulses < scheme.maximumByteFrameLength(); skipPulses++) {
-                analysisFileExtractor = new EncodingSchemeFileExtractor(scheme, skipPulses);
+                analysisFileExtractor = new EncodingSchemeFileExtractor(scheme, skipPulses, channelName);
                 analysisFileExtractor.registerFileStreamConsumer(fileExtractor);
                 pulseInput = analysisFileExtractor; // TODO currently this only goes to one
                 pulseExtractor.registerPulseStreamConsumer(analysisFileExtractor);

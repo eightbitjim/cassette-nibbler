@@ -34,6 +34,8 @@ public class CommodorePulseTest implements PulseStreamConsumer {
     private ZeroCrossingIntervalExtractor intervalExtractor;
     private StringBuilder resultString;
 
+    private String channelName = "channel";
+
     private static final String PATH_TO_TEST_FILES = "src/test/testFiles/";
     private static final String SHORT_PULSE_FILENAME = PATH_TO_TEST_FILES + "short.wav";
 
@@ -49,7 +51,7 @@ public class CommodorePulseTest implements PulseStreamConsumer {
     @Test
     public void testCommodore64ShortFile() throws Throwable {
         String expectedResult = "smsmsmsmssmsmlmsmsmsmmssmsmsmsmsmlmsmsmmsmsmsmssmsmmslmsmsmsmsmsmsmsmsmmslmmssmsmmsmssmsmmsmslmsmmssmsmsmmssmsmmslmsmsmsmsmsmmssmsmsmlmmssmmsmsmssmmsmsmslmsmsmsmsmsmmssmmsmslmsmsmsmsmsmmssmsmsmlmmssmmsmsmssmmsmsmslmsmsmsmsmsmmssmmsmslmsmsmsmsmsmmssmsmsmlmmssmmsmsmssmmsmsmslmsmsmsmsmsmmssmsmsmlmsmmssmmssmsmmsmsmslmsmsmsmse";
-        AudioInput reader = new AudioInput(SHORT_PULSE_FILENAME);
+        AudioInput reader = new AudioInput(SHORT_PULSE_FILENAME, channelName);
         try {
             reader.registerSampleStreamConsumer(intervalExtractor);
             pushStreamTrhoughSystem(reader);

@@ -36,8 +36,7 @@ public class ZX81ByteReader implements ByteStreamProvider, PulseStreamConsumer {
     int numberOfInvalidPulsesSinceLastByte;
 
     private List<ByteStreamConsumer> consumers;
-    private transient TapeExtractionOptions options = TapeExtractionOptions.getInstance();
-    private transient TapeExtractionLogging logging = TapeExtractionLogging.getInstance();
+    private transient TapeExtractionLogging logging;
     private static final int INVALID = -1;
     private static final int END_OF_STREAM = -2;
 
@@ -52,7 +51,8 @@ public class ZX81ByteReader implements ByteStreamProvider, PulseStreamConsumer {
     private static final long nanosecondsBetweenLongPulsesForOneBit = 3700000L;
     private static final long leewayInmatchingBitLengths = 300000L;
 
-    public ZX81ByteReader() {
+    public ZX81ByteReader(String channelName) {
+        logging = TapeExtractionLogging.getInstance(channelName);
         longPulseFound = false;
         consumers = new LinkedList<>();
         numberOfShortPulsesSinceLongPulse = 0;
