@@ -59,11 +59,11 @@ public class ZX81 extends Platform {
             pulseExtractor.registerPulseStreamConsumer(byteExtractor);
             byteExtractor.registerByteStreamConsumer(fileExtractor);
             fileExtractor.registerFileStreamConsumer(fileCombiner);
+            intervalInput = pulseExtractor;
         }
 
         sampleInput = splitter;
         postFilterSampleInput = splitter;
-        intervalInput = null;
         pulseInput = null;
 
         intervalOutput = null;

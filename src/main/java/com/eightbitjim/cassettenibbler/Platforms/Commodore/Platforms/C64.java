@@ -34,7 +34,7 @@ public class C64 extends Platform {
         super();
 
         name = "commodore";
-        description = "Commodore 64, 128, VIC20, PET";
+        description = "ROM Loader for Commodore 64, 128, VIC20, PET";
     }
 
     @Override
@@ -45,7 +45,7 @@ public class C64 extends Platform {
         ZeroCrossingIntervalExtractor intervalExtractor = new ZeroCrossingIntervalExtractor();
         Commodore64Vic20PulseExtractor pulseExtractor = new Commodore64Vic20PulseExtractor(false);
         CommodoreFileExtractor fileExtractor = new CommodoreFileExtractor(C64_DEFAULT_FILE_EXTENSION, channelName);
-        CommodoreByteReader byteReader = new CommodoreByteReader(channelName);
+        CommodoreByteReader byteReader = new CommodoreByteReader(channelName+"ByteScraping");
 
         highPass.registerSampleStreamConsumer(intervalExtractor);
         intervalExtractor.registerIntervalStreamConsumer(pulseExtractor);

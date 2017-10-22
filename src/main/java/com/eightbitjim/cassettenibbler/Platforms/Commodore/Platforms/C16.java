@@ -31,7 +31,7 @@ public class C16 extends Platform {
         super();
 
         name = "commodore16+4";
-        description = "Commodore 16, Commodore +4";
+        description = "ROM Loader for Commodore 16, Commodore +4";
     }
 
     @Override

@@ -53,6 +53,7 @@ public class ZXSpectrum extends Platform {
         postFilterSampleInput = intervalExtractor;
         pulseInput = fileExtractor;
         pulseOutput = pulseExtractor;
+        intervalInput = pulseExtractor;
         intervalOutput = intervalExtractor;
         fileOutput = fileExtractor;
 
