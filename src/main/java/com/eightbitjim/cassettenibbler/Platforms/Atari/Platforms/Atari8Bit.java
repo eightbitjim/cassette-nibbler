@@ -57,6 +57,7 @@ public class Atari8Bit extends Platform {
         pulseOutput = pulseExtractor;
         intervalOutput = intervalExtractor;
         fileOutput = fileExtractor;
+        intervalInput = pulseExtractor;
 
         registerTypes();
     }

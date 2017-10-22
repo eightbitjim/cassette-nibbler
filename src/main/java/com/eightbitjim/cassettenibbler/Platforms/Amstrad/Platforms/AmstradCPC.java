@@ -50,6 +50,7 @@ public class AmstradCPC extends Platform {
         pulseExtractor.registerPulseStreamConsumer(fileExtractor);
 
         sampleInput = lowPass;
+        intervalInput = pulseExtractor;
         postFilterSampleInput = intervalExtractor;
         pulseInput = fileExtractor;
         pulseOutput = pulseExtractor;

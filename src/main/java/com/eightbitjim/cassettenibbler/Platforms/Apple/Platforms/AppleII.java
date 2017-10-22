@@ -60,6 +60,7 @@ public class AppleII extends Platform {
         pulseInput = fileExtractor;
         pulseOutput = pulseExtractor;
         intervalOutput = intervalExtractor;
+        intervalInput = pulseExtractor;
         fileOutput = fileExtractor;
 
         registerTypes();

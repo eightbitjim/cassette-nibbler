@@ -22,6 +22,7 @@ import com.eightbitjim.cassettenibbler.*;
 import com.eightbitjim.cassettenibbler.DataSink.*;
 import com.eightbitjim.cassettenibbler.DataSource.AudioInputLibrary.AudioInput;
 import com.eightbitjim.cassettenibbler.DataSource.DataSourceNotAvailableException;
+import com.eightbitjim.cassettenibbler.DataSource.IntervalSourceFromTAPInputStream;
 import com.eightbitjim.cassettenibbler.DataSource.Live.LineInput;
 import com.eightbitjim.cassettenibbler.Platforms.Amstrad.AmstradPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Apple.ApplePlatformProvider;
@@ -45,7 +46,7 @@ import java.util.List;
 
 public class ExtractFile {
 
-    enum InputType { WAV, PULSES, SAMPLES }
+    enum InputType { WAV, PULSES, SAMPLES, COMMODORE_TAP }
     enum InputSource { STREAM, LINE }
 
     enum OutputDestination { DIRECTORY_LISTING, FILES, STANDARD_OUT }
@@ -83,6 +84,7 @@ public class ExtractFile {
     private TimeCounter counter;
     private SampleStreamProvider sampleSource;
     private PulseSourceFromInputStream pulseSource;
+    private IntervalSourceFromTAPInputStream intervalSource;
     private SampleStreamProvider connector;
     private Directory directory;
     private transient TapeExtractionOptions options;
@@ -211,6 +213,9 @@ public class ExtractFile {
         } else if (inputType == InputType.PULSES) {
             pulseSource = new PulseSourceFromInputStream(inputStream);
             connector = new DummySampleSource();
+        } else if (inputType == InputType.COMMODORE_TAP) {
+            intervalSource = new IntervalSourceFromTAPInputStream(inputStream);
+            connector = new DummySampleSource();
         }
 
         linkSourceToPlatforms();
@@ -328,6 +333,9 @@ public class ExtractFile {
                     break;
                 case PULSES:
                     pulseSource.registerPulseStreamConsumer(platform.getPulseInputPoint());
+                    break;
+                case COMMODORE_TAP:
+                    intervalSource.registerIntervalStreamConsumer(platform.getIntervalInputPoint());
                     break;
             }
         }
@@ -470,6 +478,9 @@ public class ExtractFile {
                     case "-input=pulses":
                         inputType = inputType.PULSES;
                         break;
+                    case "-input=tap":
+                        inputType = inputType.COMMODORE_TAP;
+                        break;
                     case "-differentiate":
                         differentiateSignal = true;
                         break;
@@ -581,6 +592,10 @@ public class ExtractFile {
         System.err.println("   directory: output files to the current directory, or specify using -output-directory");
         System.err.println("   listing: list filenames to standard out");
         System.err.println("   stdout: output file contents to standard out");
+        System.err.println("-input=<type>, specifies the format of the input files. One of:");
+        System.err.println("   wav: an audio file, such as WAV (default)");
+        System.err.println("   pulses: a pulse file that was previously output with -logging=parsing");
+        System.err.println("   tap: a version 0 or 1 Commodore TAP file");
         System.err.println("-output=<type>, chooses format of output files. One of (defaults to all):");
         System.err.println("   binary: binary file content");
         System.err.println("   text: text, e.g. ASCII or Basic listing");
@@ -607,8 +622,6 @@ public class ExtractFile {
         System.err.println("   minimal: errors only and major pieces of information");
         System.err.println("   verbose: lots of detail (very long)");
         System.err.println("   parsing: outputs pulses that can be edited and loaded back in via -input=pulses");
-        System.err.println("-input=pulses: reads a pulse file instead of an audio file. The pulse file can be");
-        System.err.println("               output with -logging=parsing");
     }
 
     private void enumeratePlatforms(PrintStream out) {
@@ -648,6 +661,9 @@ public class ExtractFile {
             case WAV:
                 runThroughWavFile();
                 break;
+            case COMMODORE_TAP:
+                runThroughTAPStream();
+                break;
             case PULSES:
                 default:
                 runThroughPulses();
@@ -660,6 +676,10 @@ public class ExtractFile {
         do {
             result = pulseSource.getNextPulseAndPushToConsumers();
         } while (result == PulseSourceFromInputStream.SUCCESS);
+    }
+
+    private void runThroughTAPStream() throws IOException {
+        intervalSource.processStreamToEnd();
     }
 
     private void runThroughWavFile() {
