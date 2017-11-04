@@ -16,17 +16,20 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Automatic;
+package com.eightbitjim.cassettenibbler.Platforms.Automatic.FormatDetection.SequenceRecognition;
 
-import com.eightbitjim.cassettenibbler.PlatformProvider;
-import com.eightbitjim.cassettenibbler.Platforms.Automatic.Platforms.C64TurboLoadExtractionPlatform;
-import com.eightbitjim.cassettenibbler.Platforms.Automatic.Platforms.AutomaticExtractionPlatform;
-import com.eightbitjim.cassettenibbler.Platforms.Automatic.Platforms.Vic20TurboLoadExtractionPlatform;
+public class vic20Recogniser extends Recogniser {
+    public vic20Recogniser() {
+        name = "vic20";
+        itemsToRecognise = new Item [] {
+            new HeavyItem('3', '6', '8', '7'),
+                new HeavyItem(141, 15, 144),
+                new HeavyItem(140, 15, 144),
+                new HeavyItem(140, 15, 144),
+                new HeavyItem(142, 15, 144),
+                new HeavyItem(142, 15, 144)
+        };
 
-public class AutomaticPlatformProvider extends PlatformProvider {
-    public AutomaticPlatformProvider() {
-        add(new AutomaticExtractionPlatform());
-        add(new C64TurboLoadExtractionPlatform());
-        add(new Vic20TurboLoadExtractionPlatform());
+        addAllItemsFrom(new m6502machineCodeRecogniser());
     }
 }
