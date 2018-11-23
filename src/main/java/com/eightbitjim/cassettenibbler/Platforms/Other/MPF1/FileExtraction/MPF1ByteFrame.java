@@ -85,9 +85,9 @@ public class MPF1ByteFrame {
 
     private int byteValue() {
         int value = 0;
-        for (int i = 0; i < 8; i++)
+        for (int i = 1; i < 9; i++)
             if (bits[i])
-                value |= (1 << i);
+                value |= (1 << (i - 1));
 
         return value;
     }

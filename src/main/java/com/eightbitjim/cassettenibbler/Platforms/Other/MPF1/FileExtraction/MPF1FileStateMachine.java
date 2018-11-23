@@ -140,7 +140,7 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
 
         // If there is enough data for a file header, use this
         if (data.size() >= 7) {
-            file.filename = "File" + file.data[0] + '-' + file.data[1] + '.' + (file.data[2] + file.data[3] * 256);
+            file.filename = "File" + String.format("%02x", file.data[1]) + String.format("%02x", file.data[0]) + '.' + (file.data[2] + file.data[3] * 256);
             file.type = "binary";
         }
 
