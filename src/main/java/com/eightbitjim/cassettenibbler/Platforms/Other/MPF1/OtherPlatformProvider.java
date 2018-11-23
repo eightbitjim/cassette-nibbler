@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. James Lean
+ * Copyright (c) 2018. James Lean
  * This file is part of cassette-nibbler.
  *
  * cassette-nibbler is free software: you can redistribute it and/or modify
@@ -16,12 +16,13 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.CommandLine;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1;
 
-public class Version {
-    public static final int major = 0;
-    public static final int minor = 3;
-    public static final String printableNumber = "v" + major + "." + minor;
-    public static final String programName = "cassette-nibbler";
-    public static final String title = programName + " " + printableNumber;
+import com.eightbitjim.cassettenibbler.PlatformProvider;
+import com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.Platforms.MPF1;
+
+public class OtherPlatformProvider extends PlatformProvider {
+    public OtherPlatformProvider() {
+        add(new MPF1());
+    }
 }
