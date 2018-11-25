@@ -43,13 +43,19 @@ public class PrintableString {
     }
 
     private static String removeReservedCharacters(String name) {
-        String nameToReturn = name.replaceAll("/", "").replaceAll("\\x2a", "").replaceAll("\\\\", "");
+        String nameToReturn = name.replaceAll("/", "")
+                .replaceAll("\\x2a", "")
+                .replaceAll("\\\\", "")
+                .replaceAll(":", "");
         while (nameToReturn.startsWith(".")) {
             if (nameToReturn.length() == 1)
                 nameToReturn = "";
             else
                 nameToReturn = nameToReturn.substring(1);
         }
+
+        if (nameToReturn.length() == 0)
+            nameToReturn = "empty";
 
         return nameToReturn;
     }
