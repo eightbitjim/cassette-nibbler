@@ -16,11 +16,12 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.FileExtraction;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.Platforms.General.FileExtraction.GenericTapeFile;
 
 public class MPFTapeFile extends GenericTapeFile {
+    private static final int HEADER_LENGTH = 7;
 
     public MPFTapeFile() {
         type = "unknown";
@@ -64,11 +65,37 @@ public class MPFTapeFile extends GenericTapeFile {
     public byte [] getDataBytesOfType(FormatType formatType) {
         switch (formatType) {
             case READABLE:
+                // Header and data as text
+                return getASCIIDump().getBytes();
+
             case EMULATOR:
-            case BINARY:
+                // Data only as binary
+                return getRawDataStartingAt(HEADER_LENGTH);
+
             default:
+            case BINARY:
+                // Header and data as binary
                 return getRawData();
         }
+    }
+
+    private String getASCIIDump() {
+        StringBuilder s = new StringBuilder();
+        int byteCount = 0;
+
+        for (int i = 0; i < data.length; i++) {
+            s.append(String.format("%02x", data[i]));
+            s.append(" ");
+
+            byteCount++;
+            if ((byteCount % 16) == 0)
+                s.append("\n");
+        }
+
+        if ((byteCount % 16) != 0)
+            s.append("\n");
+
+        return s.toString();
     }
 
     @Override
@@ -76,11 +103,11 @@ public class MPFTapeFile extends GenericTapeFile {
         switch (formatType) {
             case BINARY:
             default:
-                return "mpf1.bin";
+                return "mpfi.headerAndData";
             case EMULATOR:
-                return "mpf1.TAP";
+                return "mpfi.data";
             case READABLE:
-                return "mpf1.txt";
+                return "mpfi.headerAndData.txt";
         }
     }
 }

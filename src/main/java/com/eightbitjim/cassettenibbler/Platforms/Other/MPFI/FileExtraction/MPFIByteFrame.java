@@ -1,8 +1,8 @@
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.FileExtraction;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.*;
 
-public class MPF1ByteFrame {
+public class MPFIByteFrame {
     private static final int FRAME_SIZE = 10;
     private static final int START_BIT_POSITION = 0;
     private static final int STOP_BIT_POSITION = 9;
@@ -18,7 +18,7 @@ public class MPF1ByteFrame {
     public static final int MORE_BITS_NEEDED = -1;
     public static final int ERROR = -2;
 
-    public MPF1ByteFrame() {
+    public MPFIByteFrame() {
         bits = new boolean[FRAME_SIZE];
         reset();
     }

@@ -16,7 +16,7 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.FileExtraction;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.FileExtraction;
 
 import com.eightbitjim.cassettenibbler.*;
 import com.eightbitjim.cassettenibbler.Platforms.General.PulseExtraction.PulseExtractiorParameters;
@@ -25,7 +25,7 @@ import com.eightbitjim.cassettenibbler.Platforms.General.PulseExtraction.PulseUt
 import java.util.LinkedList;
 import java.util.List;
 
-public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProvider, PulseStreamProvider {
+public class MPFIFileStateMachine implements PulseStreamConsumer, FileStreamProvider, PulseStreamProvider {
     enum State {
         RECEIVING_LEAD_SYNC,
         RECEIVING_HEADER,
@@ -34,16 +34,16 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
         RECEIVING_TAIL_SYNC
     }
 
-    private State state;
-    private static final double maxGapBetweenBytesInSecondsBeforeReset = 0.5;
-    private static final double NANOSECOND = 1.0 / 1000000000.0;
+    private static final int HEADER_SIZE = 7;
 
+    private State state;
     private List<FileStreamConsumer> fileStreamConsumers;
     private List<PulseStreamConsumer> pulseStreamConsumers;
     private char currentPulse;
+    private boolean fileHasError;
 
     private List<Integer> data;
-    MPF1ByteFrame byteFrame;
+    MPFIByteFrame byteFrame;
 
     private long currentTimeIndex;
     private transient TapeExtractionLogging logging;
@@ -53,9 +53,9 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
     private int lengthOfTailSync;
     private static final int SYNC_LENGTH = 10;
 
-    public MPF1FileStateMachine(String channelName) {
+    public MPFIFileStateMachine(String channelName) {
         logging = TapeExtractionLogging.getInstance(channelName);
-        byteFrame = new MPF1ByteFrame();
+        byteFrame = new MPFIByteFrame();
         this.channelName = channelName;
         fileStreamConsumers = new LinkedList<>();
         pulseStreamConsumers = new LinkedList<>();
@@ -63,11 +63,12 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
         state = State.RECEIVING_HEADER;
         lengthOfLeadSync = 0;
         lengthOfTailSync = 0;
+        fileHasError = false;
     }
 
     public void addPulse(char pulseType) {
         if (pulseType == PulseStreamConsumer.END_OF_STREAM) {
-            logging.writeFileParsingInformation("END OF STREAM. Interpreting as silence");
+            logging.writeFileParsingInformation("END OF STREAM Interpreting as silence");
             currentPulse = PulseStreamConsumer.SILENCE;
         }
 
@@ -84,7 +85,7 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
                 addPulseToByte();
                 break;
             default:
-                logging.writeFileParsingInformation("Unknown state reached.");
+                logging.writeFileParsingInformation("Unknown state reached");
                 break;
         }
     }
@@ -102,7 +103,7 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
 
         if (lengthOfLeadSync >= SYNC_LENGTH) {
             if (state != State.RECEIVING_LEAD_SYNC) {
-                logging.writeFileParsingInformation("Detected lead sync.");
+                logging.writeFileParsingInformation("Detected lead sync");
                 resetStateMachine();
                 state = State.RECEIVING_LEAD_SYNC;
             }
@@ -112,10 +113,10 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
 
         if (lengthOfTailSync >= SYNC_LENGTH) {
             if (state == State.RECEIVING_HEADER) {
-                logging.writeFileParsingInformation("Detected mid sync.");
+                logging.writeFileParsingInformation("Detected mid sync");
                 state = State.RECEIVING_MID_SYNC;
             } else if (state == State.RECEIVING_DATA) {
-                logging.writeFileParsingInformation("Detected tail sync.");
+                logging.writeFileParsingInformation("Detected tail sync");
                 state = State.RECEIVING_TAIL_SYNC;
                 storeFile();
             }
@@ -125,8 +126,8 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
     }
 
     private void storeFile() {
-        if (data.size() == 0) {
-            logging.writeFileParsingInformation("Zero length file. Not storing.");
+        if (data.size() <= HEADER_SIZE) {
+            logging.writeFileParsingInformation("File is not longer than a header so not storing");
             return;
         }
 
@@ -140,37 +141,43 @@ public class MPF1FileStateMachine implements PulseStreamConsumer, FileStreamProv
 
         // If there is enough data for a file header, use this
         if (data.size() >= 7) {
-            file.filename = "File" + String.format("%02x", file.data[1]) + String.format("%02x", file.data[0]) + '.' + (file.data[2] + file.data[3] * 256);
+            file.filename = String.format("%02x", file.data[1]) + String.format("%02x", file.data[0]) + '.' + (file.data[2] + file.data[3] * 256);
             file.type = "binary";
         }
+
+        // Was there an error?
+        if (fileHasError)
+            file.isInError();
 
         pushFileToConsumers(file);
         data.clear();
     }
 
     private void addPulseToByte() {
-
         if (currentPulse == PulseStreamConsumer.INVALID_PULSE_TOO_LONG ||
                 currentPulse == PulseStreamConsumer.INVALID_PULSE_TOO_SHORT ||
                 currentPulse == PulseStreamConsumer.SILENCE) {
-            logging.writeDataError(currentTimeIndex, "Invalid pulse found in data.");
+            logging.writeDataError(currentTimeIndex, "Invalid pulse found in data");
+            fileHasError = true;
             return;
         }
 
         int value = byteFrame.addPulseAndReturnByteOrStatus(currentPulse);
-        if (value == MPF1ByteFrame.ERROR) {
-            logging.writeDataError(currentTimeIndex, "Error in byte frame.");
+        if (value == MPFIByteFrame.ERROR) {
+            logging.writeDataError(currentTimeIndex, "Error in byte frame");
+            fileHasError = true;
             return;
         }
 
-        if (value != MPF1ByteFrame.MORE_BITS_NEEDED) {
+        if (value != MPFIByteFrame.MORE_BITS_NEEDED) {
             if (state == State.RECEIVING_LEAD_SYNC) {
                 state = State.RECEIVING_HEADER;
-                logging.writeFileParsingInformation("Receiving header.");
+                fileHasError = false;
+                logging.writeFileParsingInformation("Receiving header");
             }
             else if (state == State.RECEIVING_MID_SYNC) {
                 state = State.RECEIVING_DATA;
-                logging.writeFileParsingInformation("Receiving data.");
+                logging.writeFileParsingInformation("Receiving data");
             }
 
             logging.writeFileParsingInformation(": " + value);

@@ -16,7 +16,7 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.PulseExtraction;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.PulseExtraction;
 
 import com.eightbitjim.cassettenibbler.*;
 

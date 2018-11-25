@@ -16,28 +16,28 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.Platforms;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.Platforms;
 
 import com.eightbitjim.cassettenibbler.Platform;
 import com.eightbitjim.cassettenibbler.Platforms.General.Demodulation.ZeroCrossingIntervalExtractor;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.HighPass;
 import com.eightbitjim.cassettenibbler.Platforms.General.Filters.LowPass;
-import com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.FileExtraction.MPF1FileStateMachine;
-import com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.PulseExtraction.PulseExtractor;
+import com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.FileExtraction.MPFIFileStateMachine;
+import com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.PulseExtraction.PulseExtractor;
 
-public class MPF1 extends Platform {
+public class MPFI extends Platform {
 
     LowPass lowPass;
     HighPass highPass;
     ZeroCrossingIntervalExtractor intervalExtractor;
     PulseExtractor pulseExtractor;
-    MPF1FileStateMachine fileExtractor;
+    MPFIFileStateMachine fileExtractor;
 
-    public MPF1() {
+    public MPFI() {
         super();
 
-        name = "mpf1";
-        description = "MPF-1 computer";
+        name = "mpfi";
+        description = "Micro-professor MPF-I computer";
     }
 
     @Override
@@ -48,7 +48,7 @@ public class MPF1 extends Platform {
         highPass = new HighPass(200, channelName);
         intervalExtractor = new ZeroCrossingIntervalExtractor();
         pulseExtractor = new PulseExtractor(channelName);
-        fileExtractor = new MPF1FileStateMachine(channelName);
+        fileExtractor = new MPFIFileStateMachine(channelName);
 
         lowPass.registerSampleStreamConsumer(highPass);
         highPass.registerSampleStreamConsumer(intervalExtractor);

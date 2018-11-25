@@ -16,7 +16,7 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.PulseExtraction;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.PulseExtraction;
 
 public class SyncDetection {
     private static final int LEAD_SYNC_HALF_CYCLE_TIME_IN_MICROSECONDS = 500;

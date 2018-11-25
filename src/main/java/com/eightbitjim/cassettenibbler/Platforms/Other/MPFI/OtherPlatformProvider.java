@@ -16,13 +16,13 @@
  * along with cassette-nibbler.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.eightbitjim.cassettenibbler.Platforms.Other.MPF1;
+package com.eightbitjim.cassettenibbler.Platforms.Other.MPFI;
 
 import com.eightbitjim.cassettenibbler.PlatformProvider;
-import com.eightbitjim.cassettenibbler.Platforms.Other.MPF1.Platforms.MPF1;
+import com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.Platforms.MPFI;
 
 public class OtherPlatformProvider extends PlatformProvider {
     public OtherPlatformProvider() {
-        add(new MPF1());
+        add(new MPFI());
     }
 }
