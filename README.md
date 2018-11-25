@@ -25,7 +25,7 @@ Currently the following formats are supported to some extent, some reasonably we
 * **TRS-80** (untested)
 * **Apple II**
 * **Atari 400 / 800 / 600XL / 800XL / 130XE** (see important notes on wiki)
-* **MPF-1**
+* **Micro-professor MPF-I**
 * **(experimental) c64 Turbo Loaders:** tries automatically to extract from any C64 turbo loader, making some guesses along the way. The results are variable.
 * **(experimental) Automatic extraction:** tries automatically to identify the encoding scheme and extract raw binary data. Sometimes it works.
 
