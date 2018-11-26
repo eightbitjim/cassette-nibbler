@@ -102,12 +102,16 @@ public class PulseExtractor implements IntervalStreamConsumer, PulseStreamProvid
             state = State.RECEIVING_HEADER;
             logging.writeFileParsingInformation("LEAD SYNC ENDED");
             processDataPulse();
+        } else {
+            // Record a pulse as this will be useful for the logging
+            generatePulse(PulseStreamConsumer.MEDIUM_PULSE);
         }
     }
 
     private void processDataPulse() {
         if (leadSyncDetection.isValid()) {
             state = State.RECEIVING_LEAD_SYNC;
+            generatePulse(PulseStreamConsumer.MEDIUM_PULSE);
             return;
         }
 

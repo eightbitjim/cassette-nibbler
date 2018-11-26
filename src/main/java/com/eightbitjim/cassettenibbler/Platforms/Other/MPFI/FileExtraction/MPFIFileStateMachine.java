@@ -126,6 +126,9 @@ public class MPFIFileStateMachine implements PulseStreamConsumer, FileStreamProv
     }
 
     private void storeFile() {
+        if (data.size() == 0)
+            return; // Don't bother storing or telling us about files with no bytes, as it probably wasn't a file at all
+
         if (data.size() <= HEADER_SIZE) {
             logging.writeFileParsingInformation("File is not longer than a header so not storing");
             return;
@@ -149,23 +152,30 @@ public class MPFIFileStateMachine implements PulseStreamConsumer, FileStreamProv
         if (fileHasError)
             file.isInError();
 
+        logging.writeFileParsingInformation("Storing file");
         pushFileToConsumers(file);
         data.clear();
     }
 
     private void addPulseToByte() {
-        if (currentPulse == PulseStreamConsumer.INVALID_PULSE_TOO_LONG ||
+        if ((currentPulse == PulseStreamConsumer.INVALID_PULSE_TOO_LONG ||
                 currentPulse == PulseStreamConsumer.INVALID_PULSE_TOO_SHORT ||
-                currentPulse == PulseStreamConsumer.SILENCE) {
-            logging.writeDataError(currentTimeIndex, "Invalid pulse found in data");
-            fileHasError = true;
+                currentPulse == PulseStreamConsumer.SILENCE)) {
+            if (state == State.RECEIVING_DATA || state == State.RECEIVING_HEADER) {
+                logging.writeDataError(currentTimeIndex, "Invalid pulse found in data");
+                fileHasError = true;
+            }
+
             return;
         }
 
         int value = byteFrame.addPulseAndReturnByteOrStatus(currentPulse);
         if (value == MPFIByteFrame.ERROR) {
-            logging.writeDataError(currentTimeIndex, "Error in byte frame");
-            fileHasError = true;
+            if (state == State.RECEIVING_DATA || state == State.RECEIVING_HEADER) {
+                logging.writeDataError(currentTimeIndex, "Error in byte frame");
+                fileHasError = true;
+            }
+
             return;
         }
 

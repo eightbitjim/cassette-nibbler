@@ -39,6 +39,8 @@ public class MPFIByteFrame {
                     else if (mediumPulses == MEDIUM_PULSES_IN_A_ONE)
                         addBit(true);
                     else {
+                        // Wrong number of medium pulses. Note the error, but continue.
+                        addBit(false);
                         isError = true;
                     }
                 }
@@ -49,7 +51,7 @@ public class MPFIByteFrame {
                 break;
 
             default:
-                // Unexpected pulse type
+                // Unexpected pulse type. Ignore.
                 isError = true;
         }
 
