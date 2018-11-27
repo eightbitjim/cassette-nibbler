@@ -32,6 +32,7 @@ import com.eightbitjim.cassettenibbler.Platforms.General.Filters.*;
 import com.eightbitjim.cassettenibbler.DataSource.DummySampleSource;
 import com.eightbitjim.cassettenibbler.DataSource.PulseSourceFromInputStream;
 import com.eightbitjim.cassettenibbler.Platforms.Acorn.AcornPlatformProvider;
+import com.eightbitjim.cassettenibbler.Platforms.Other.MPFI.OtherPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.MSX.MSXPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Oric.OricPlatformProvider;
 import com.eightbitjim.cassettenibbler.Platforms.Sinclair.SinclairPlatformProvider;
@@ -724,5 +725,6 @@ public class ExtractFile {
         availablePlatforms.addAll(new AmstradPlatformProvider().getPlatforms());
         availablePlatforms.addAll(new AtariPlatformProvider().getPlatforms());
         availablePlatforms.addAll(new AutomaticPlatformProvider().getPlatforms());
+        availablePlatforms.addAll(new OtherPlatformProvider().getPlatforms());
     }
 }

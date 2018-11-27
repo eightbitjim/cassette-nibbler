@@ -141,12 +141,16 @@ public class GenericTapeFile extends TapeFile {
     }
 
     protected byte [] getRawData() {
+        return getRawDataStartingAt(0);
+    }
+
+    protected byte [] getRawDataStartingAt(int start) {
         if (data == null)
             return new byte[0];
 
-        byte [] b = new byte[data.length];
-        for (int i = 0; i < data.length; i++)
-            b[i] = (byte)data[i];
+        byte [] b = new byte[data.length - start];
+        for (int i = start; i < data.length; i++)
+            b[i - start] = (byte)data[i];
 
         return b;
     }
