@@ -234,13 +234,15 @@ public class Line {
     }
 
     private void processRSXCommand() throws IOException {
-        int valueOffsetToIgnore = getByteValue();
+        // Skip over the next byte
+        getByteValue();
         String commandName = getStringFromInput();
         builder.append("|").append(commandName);
     }
 
     private void processVariableWithTokenNoSuffix() throws IOException {
-        int offsetToIgnore = getTwoByteValue();
+        // Skip over the next byte
+        getTwoByteValue();
         String variableName = getStringFromInput();
         builder.append(variableName);
     }
