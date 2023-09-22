@@ -204,7 +204,6 @@ public class FileStateMachine implements PulseStreamConsumer, FileStreamProvider
                     logging.writeDataError(currentTimeIndex, "Options ask us to continue, so spoofing two 1 bits");
                     changeCurrentPulseTo(PulseStreamConsumer.MEDIUM_PULSE);
                     addPulseToByte();
-
                     currentByteContainedErrors = true;
                 } else {
                     logging.writeFileParsingInformation("Ignoring.");

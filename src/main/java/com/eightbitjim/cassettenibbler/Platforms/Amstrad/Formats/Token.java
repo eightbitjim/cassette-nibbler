@@ -19,20 +19,19 @@
 package com.eightbitjim.cassettenibbler.Platforms.Amstrad.Formats;
 
 public class Token {
-
-    private static String [] lowTokenArray = {
-      "AFTER", "AUTO", "BORDER", "CALL", "CAT", "CHAIN", "CLEAR", "CLG", "CLOSEIN", "CLOSEOUT",
-            "CLS", "CONT", "DATA", "DEF", "DEFINT", "DEFREAL", "DEFSTR", "DEG", "DELETE", "DIM", "DRAW",
-            "DRAWR", "EDIT", "ELSE", "END", "ENT", "ENV", "ERASE", "ERROR", "EVERY", "FOR", "GOSUB", "GOTO",
-            "IF", "INK", "INPUT", "KEY", "LET", "LINE", "LIST", "LOAD", "LOCATE", "MEMORY", "MERGE", "MID$",
-            "MODE", "MOVE", "MOVER", "NEXT", "NEW", "ON", "ON BREAK", "ON ERROR GOTO", "SQ", "OPENIN", "OPENOUT",
-            "ORIGIN", "OUT", "PAPER", "PEN", "PLOT", "PLOTR", "POKE", "PRINT", "'", "RAD", "RANDOMIZE", "READ",
-            "RELEASE", "REM", "RENUM", "RESOTRE", "RESUME", "RETURN", "RUN", "SAVE", "SOUND", "SPEED", "STOP",
-            "SYMBOL", "TAG", "TAGOFF", "TROFF", "TRON", "WAIT", "WEND", "WHILE", "WIDTH", "WINDOW", "WRITE",
-            "ZONE", "DI", "EI", "FILL", "GRAPHICS", "MASK", "FRAME", "CURSOR", "", "ERL", "FN", "SPC",
-            "STEP", "SWAP", "", "", "TAB", "THEN", "TO", "USING", ">", "=", ">=", "<", "<=",
-            "+", "-", "*", "/", "^", "\\", "AND", "MOD", "OR", "XOR", "NOT"
-    };
+    public static String [] lowTokenArray = {
+        "AFTER", "AUTO", "BORDER", "CALL", "CAT", "CHAIN", "CLEAR", "CLG", "CLOSEIN", "CLOSEOUT",
+              "CLS", "CONT", "DATA", "DEF", "DEFINT", "DEFREAL", "DEFSTR", "DEG", "DELETE", "DIM", "DRAW",
+              "DRAWR", "EDIT", "ELSE", "END", "ENT", "ENV", "ERASE", "ERROR", "EVERY", "FOR", "GOSUB", "GOTO",
+              "IF", "INK", "INPUT", "KEY", "LET", "LINE", "LIST", "LOAD", "LOCATE", "MEMORY", "MERGE", "MID$",
+              "MODE", "MOVE", "MOVER", "NEXT", "NEW", "ON", "ON BREAK", "ON ERROR GOTO", "SQ", "OPENIN", "OPENOUT",
+              "ORIGIN", "OUT", "PAPER", "PEN", "PLOT", "PLOTR", "POKE", "PRINT", "'", "RAD", "RANDOMIZE", "READ",
+              "RELEASE", "REM", "RENUM", "RESOTRE", "RESUME", "RETURN", "RUN", "SAVE", "SOUND", "SPEED", "STOP",
+              "SYMBOL", "TAG", "TAGOFF", "TROFF", "TRON", "WAIT", "WEND", "WHILE", "WIDTH", "WINDOW", "WRITE",
+              "ZONE", "DI", "EI", "FILL", "GRAPHICS", "MASK", "FRAME", "CURSOR", "", "ERL", "FN", "SPC",
+              "STEP", "SWAP", "", "", "TAB", "THEN", "TO", "USING", ">", "=", ">=", "<", "<>", "<=",
+              "+", "-", "*", "/", "^", "\\", "AND", "MOD", "OR", "XOR", "NOT", ""
+      };
 
     private static String [] highTokenArray = {
             "ABS", "ASC", "ATN", "CHR$", "CINT", "COS", "CREAL", "EXP", "FIX", "FRE", "INKEY", "INP", "INT",
@@ -57,43 +56,7 @@ public class Token {
             "ROUND", "STRING$", "TEST", "TESTR", "COPYCHR$", "VPOS"
     };
 
-    private static boolean insideRemStatement;
-    private static boolean insideQuote;
-
-    public static void lineEnded() {
-        insideRemStatement = false;
-        insideQuote = false;
-    }
-
     public static String getStringForTokenValue(int value) {
-        boolean foundRemStatement = false;
-        switch (value) {
-            case 0: // End of line
-                insideRemStatement = false;
-                return "";
-            case 1: // :
-                insideRemStatement = false;
-                return ":";
-            case 32:
-                return " ";
-            case 33:
-                return "!";
-            case 34:
-                insideQuote = !insideQuote;
-                return "\"";
-            case 245:
-                return "-";
-            case 0xc0: // '
-            case 0xc5: // REM statement
-                foundRemStatement = true;
-        }
-
-        if (insideRemStatement || insideQuote)
-            return "" + (char)value;
-
-        if (foundRemStatement)
-            insideRemStatement = true;
-
         if (value < 32)
             return "";
 

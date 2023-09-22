@@ -24,6 +24,9 @@ import java.io.InputStream;
 public class Line {
     private InputStream inputStream;
     private StringBuilder builder;
+    private boolean endOfLine = false;
+    private boolean insideRemStatement = false;
+    private boolean insideQuote = false;
 
     private static final int END_OF_LINE_MARKER = 0;
     private static final int EXTENDED_TOKEN_PREFIX = 0xff;
@@ -48,23 +51,63 @@ public class Line {
             return;
 
         builder.append(Integer.toString(lineNumber)).append(" ");
-        while (inputStream.available() > 0) {
+        endOfLine = false;
+        while ((inputStream.available() > 0) && (!endOfLine)) {
             int value = getByteValue();
-            processValue(value);
             if (value == END_OF_LINE_MARKER)
                 break;
+            processValue(value);
         }
-
-        Token.lineEnded();
     }
 
     private void processValue(int tokenValue) throws IOException {
+        // Treat a colon (1) as special: if we see a colon, move on to the next
+        // token, and only add the colon if the next token isn't an ELSE
+        if (tokenValue == 1) {
+            tokenValue = getByteValue();
+            if (tokenValue != 151)
+                builder.append(":");            
+        }
+
+        if (insideQuote) {
+            // Only respond to ends of lines and closig quotes, otherwise print the character if it's
+            // in the 32-127 range. If outside this range, replace with a '#', as we don't have the
+            // Amstrad character set
+            if (tokenValue == 0) {
+                endOfLine = true;
+                return;
+            }
+            if (tokenValue > 31 && tokenValue < 128)
+                builder.append((char)tokenValue);
+            else
+                builder.append("#");
+            if (tokenValue == 34)
+                insideQuote = false;
+            return;
+        }
+
         switch (tokenValue) {
+            case 0:
+                // End of line marker, should have already been picked up
+                endOfLine = true;
+                return;
+            case 1:
+                // Don't output a colon until we see the next token, as we don't want
+                // to display colons in front of an ELSE
+                // But this will terminate a REM statement
+                insideRemStatement = false;
+                return;
             case 2:
             case 3:
             case 4:
                 processVariableWithTokenAndSuffix(tokenValue);
                 return;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
             case 11:
             case 12:
             case 13:
@@ -104,15 +147,35 @@ public class Line {
             case 31:
                 processFloatingPoint();
                 return;
+            case 34:
+                insideQuote = !insideQuote;
+                break;
             case RSX_TOKEN_MARKER:
                 processRSXCommand();
                 return;
+            case 192: // '
+                processApostrophe();
+                return;
+            case 197: // REM statement
+                insideRemStatement = true;
+                break;
+            case 245:
+                processMinus();
+                return;
+            case EXTENDED_TOKEN_PREFIX:
+                tokenValue = getByteValue() + 0x100;
+                break;
         }
 
-        if (tokenValue == EXTENDED_TOKEN_PREFIX)
-            tokenValue = getByteValue() + 0x100;
-
         builder.append(Token.getStringForTokenValue(tokenValue));
+    }
+
+    private void processApostrophe() {
+        builder.append("'");
+    }
+
+    private void processMinus() {
+        builder.append("-");
     }
 
     private void processBinaryIntegerValue() throws IOException {
@@ -126,7 +189,7 @@ public class Line {
     }
 
     private void processLineMemoryAddressPointer() {
-        builder.append("(memory address values not implemented)");
+        builder.append("(memory address values not yet implemented)");
     }
 
     private int getByteValue() throws IOException {
@@ -134,7 +197,6 @@ public class Line {
             throw new IOException("End of file reached");
 
         int value = inputStream.read();
-      //  builder.append("(" + value + ")");
         return value;
     }
 
@@ -172,13 +234,15 @@ public class Line {
     }
 
     private void processRSXCommand() throws IOException {
-        int valueOffsetToIgnore = getByteValue();
+        // Skip over the next byte
+        getByteValue();
         String commandName = getStringFromInput();
         builder.append("|").append(commandName);
     }
 
     private void processVariableWithTokenNoSuffix() throws IOException {
-        int offsetToIgnore = getTwoByteValue();
+        // Skip over the next byte
+        getTwoByteValue();
         String variableName = getStringFromInput();
         builder.append(variableName);
     }
@@ -202,13 +266,32 @@ public class Line {
     private String getStringFromInput() throws IOException {
         StringBuilder localString = new StringBuilder();
         boolean valueHadTopBitSet = false;
+        boolean insideString = false;
+        StringBuilder tempOriginal = new StringBuilder();
         while (!valueHadTopBitSet) {
             char value = (char)getByteValue();
-            if ((value & 128) != 0) {
-                value -= 128;
-                valueHadTopBitSet = true;
+            if (value == 34) { /* Quotes */
+                if (!insideString)
+                    insideString = true;
+                else
+                    insideString = false;
+                    break;
             }
 
+            if (value == 0) {
+                endOfLine = true;
+                break;
+            }
+
+            if (!insideString) {
+                if ((value & 128) != 0) {
+                    value -= 128;
+                    valueHadTopBitSet = true;
+                }
+            }
+
+            tempOriginal.append((int)value);
+            tempOriginal.append(" ");
             localString.append(value);
         }
 

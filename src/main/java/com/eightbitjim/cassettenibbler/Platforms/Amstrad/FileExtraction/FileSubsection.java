@@ -23,6 +23,7 @@ import java.util.List;
 
 public abstract class FileSubsection {
     protected List<Byte> data;
+    protected List<Byte> checksum;
     protected static final int CHECKSUM_SIZE = 2;
     private static final int SUBSECTION_LENGTH = 256;
 
@@ -41,17 +42,20 @@ public abstract class FileSubsection {
 
     public FileSubsection() {
         data = new ArrayList<>();
+        checksum = new ArrayList<>();
     }
 
     public void addByte(byte value) {
         if (!moreBytesNeeded())
             return;
-
-        data.add(value);
+        if (data.size() >= SUBSECTION_LENGTH)
+            checksum.add(value);
+        else
+            data.add(value);
     }
 
     public boolean moreBytesNeeded() {
-        return data.size() < SUBSECTION_LENGTH + CHECKSUM_SIZE;
+        return data.size() + checksum.size() < SUBSECTION_LENGTH + CHECKSUM_SIZE;
     }
 
     public boolean checksumIsValid() {
